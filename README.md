@@ -1,3 +1,7 @@
+# JS-in-C
+
+---
+
 #Lex
 ##Usage
 
@@ -60,4 +64,5 @@ And if the script contains multi-line comments, you need to read the whole text,
 
 2. do not support operators '>>>' and '>>>='
 
+---
 
