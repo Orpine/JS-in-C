@@ -6,22 +6,22 @@
 //  Copyright © 2015 laoreja. All rights reserved.
 //
 
-#include "Lex.hpp"
+#include "Lex.h"
 #include <regex>
 
 //the tokens that can appear before numbers with '+/-' prefix
 set<TOKEN_TYPES> tokenBeforePrefix{TK_L_BRACKET, TK_ASSIGN, TK_PLUS_EQUAL, TK_MINUS_EQUAL, TK_MULTI_EQUAL, TK_DIV_EQUAL, TK_MOD_EQUAL, TK_AND_EQUAL,
-    TK_OR_EQUAL,
-    TK_L_EQUAL,
-    TK_G_EQUAL, };
+                                   TK_OR_EQUAL,
+                                   TK_L_EQUAL,
+                                   TK_G_EQUAL, };
 
 int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
-    
+
     regex floatExp("^[\\+-]?((([1-9]\\d*)?\\.\\d+|[1-9]\\d*(\\.\\d*)?)[eE][\\+-]?[1-9]\\d*|([1-9]\\d*)?\\.\\d+)");
     regex decExp("^([\\+-]?[1-9]\\d*|0)");
     regex octalExp("^0[1-7][0-7]*");
     regex hexExp("^0[xX][1-9a-fA-F][0-9a-fA-F]*");
-    
+
     while (isspace(str.at(startPos))) {
         startPos++;
         if (startPos == str.length()) {
@@ -29,10 +29,10 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
             return startPos;
         }
     }
-    
+
     int i = startPos;
     bool maybeANum = false;
-    
+
     if (str.at(i) == '.' || isdigit(str.at(i))) {
         maybeANum = true;
     }else if(str.at(i) == '+' || str.at(i) == '-'){
@@ -40,7 +40,7 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
             maybeANum = true;
         }
     }
-    
+
     if (maybeANum) {
         if ( (str.at(i) != '+' && str.at(i) != '-') || (lastTk.type != TK_START && lastTk.type != TK_IDENTIFIER && lastTk.type != TK_DEC_INT && lastTk.type != TK_OCTAL_INT && lastTk.type != TK_HEX_INT && lastTk.type != TK_FLOAT)) {
             smatch m;
@@ -63,9 +63,9 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
                 return i;
             }
         }
-        
+
     }
-    
+
     if(!isalpha(str.at(i)) && str.at(i) != '_'){
         //token is of types other than num and identifier
         switch (str.at(i)) {
@@ -78,8 +78,8 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
                     tk.setToken(tokenMap[str.substr(i, 2)], str.substr(i, 2));
                     return i + 2;
                 }
-                //remove comment. '/' 出现在这里，只能是注释
-                // '//', '/* */'
+                    //remove comment. '/' 出现在这里，只能是注释
+                    // '//', '/* */'
                 else if (str.at(i+1) == '/') {
                     while (i != str.length() && str.at(i) != '\n') {
                         i++;
@@ -194,12 +194,12 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
                     return i + 3;
                 }
                 break;
-                
+
             default:
                 cout << "No such token!" << endl;
                 break;
         }
-        
+
     }else{
         while ( isalnum(str.at(i)) || str.at(i) == '_' ) {
             i++;
@@ -207,7 +207,7 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
                 break;
             }
         }
-        
+
         tk.value = str.substr(startPos, i - startPos);
         if ( tokenMap.find(tk.value) != tokenMap.end() ) {
             tk.type = tokenMap[tk.value];
@@ -216,7 +216,7 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
         }
         return i;
     }
-    
+
     cout << "No such token" << endl;
     return -1;
 }
@@ -254,25 +254,25 @@ void Lex::initialTokenMap(){
     tokenMap["super"] = TK_SUPER;
     tokenMap["delete"] = TK_DELETE;
     tokenMap["typeof"] = TK_TYPEOF;
-    
+
     //done
     tokenMap["++"] = TK_PLUS_PLUS;
     tokenMap["--"] = TK_MINUS_MINUS;
     tokenMap["+"] = TK_PLUS;
     tokenMap["-"] = TK_MINUS;
     tokenMap["~"] = TK_BITWISE_NOT;
-    
+
     tokenMap["!"] = TK_NOT;
     tokenMap["*"] = TK_MULTIPLY;
     tokenMap["/"] = TK_DIVIDE;
     tokenMap["%"] = TK_MOD;
-    
+
     tokenMap["**"] = TK_EXPONENT;
     tokenMap["<"] = TK_LESS;
     tokenMap[">"] = TK_GREATER;
     tokenMap["<="] = TK_L_EQUAL;
     tokenMap[">="] = TK_G_EQUAL;
-    
+
     tokenMap["=="] = TK_EQUAL;
     tokenMap["!="] = TK_N_EQUAL;
     tokenMap["==="] = TK_TYPEEQUAL;
@@ -295,7 +295,7 @@ void Lex::initialTokenMap(){
     tokenMap["&="] = TK_AND_EQUAL;
     tokenMap["^="] = TK_XOR_EQUAL;
     tokenMap["|="] = TK_OR_EQUAL;
-    
+
     tokenMap["true"] = TK_TRUE;
     tokenMap["false"] = TK_FALSE;
     //done
