@@ -34,8 +34,10 @@ after that, directly use l.tokens:
 * tokens defined in TOKEN_TYPES
 
 Numbers:
-	signed decimal:
-    positive octal(prefix '0'), hex(prefix '0x', '0X'):
+	signed decimal;
+
+    positive octal(prefix '0'), hex(prefix '0x', '0X');
+    
     signed float:
 
 	"^[\+-]?((([1-9]\d*)?\.\d+|[1-9]\d*(\.\d*)?)[eE][\+-]?[1-9]\d*|([1-9]\d*)?\.\d+)"

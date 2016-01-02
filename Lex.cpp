@@ -42,28 +42,32 @@ int Lex::getNextToken(string& str, int startPos, Token& tk, Token& lastTk){
     }
 
     if (maybeANum) {
-        if ( (str.at(i) != '+' && str.at(i) != '-') || (lastTk.type != TK_START && lastTk.type != TK_IDENTIFIER && lastTk.type != TK_DEC_INT && lastTk.type != TK_OCTAL_INT && lastTk.type != TK_HEX_INT && lastTk.type != TK_FLOAT)) {
-            smatch m;
-            string s = str.substr(i);
-            if (regex_search(s, m, floatExp)) {
-                tk.setToken(TK_FLOAT, m[0]);
-                i += tk.value.length();
-                return i;
-            }else if(regex_search(s, m, octalExp)){
-                tk.setToken(TK_OCTAL_INT, m[0]);
-                i += tk.value.length();
-                return i;
-            }else if (regex_search(s, m, hexExp)){
-                tk.setToken(TK_HEX_INT, m[0]);
-                i += tk.value.length();
-                return i;
-            }else if(regex_search(s, m, decExp)){
-                tk.setToken(TK_DEC_INT, m[0]);
-                i += tk.value.length();
-                return i;
-            }
+//        if ( (str.at(i) != '+' && str.at(i) != '-') || (lastTk.type != TK_START && lastTk.type != TK_IDENTIFIER && lastTk.type != TK_DEC_INT && lastTk.type != TK_OCTAL_INT && lastTk.type != TK_HEX_INT && lastTk.type != TK_FLOAT)) {
+        smatch m;
+        string s = str.substr(i);
+        if (regex_search(s, m, floatExp)) {
+            tk.setToken(TK_FLOAT, m[0]);
+            i += tk.value.length();
+            return i;
+        }else if(regex_search(s, m, octalExp)){
+            tk.setToken(TK_OCTAL_INT, m[0]);
+            i += tk.value.length();
+            return i;
+        }else if (regex_search(s, m, hexExp)){
+            tk.setToken(TK_HEX_INT, m[0]);
+            i += tk.value.length();
+            return i;
+        }else if(regex_search(s, m, decExp)){
+            tk.setToken(TK_DEC_INT, m[0]);
+            i += tk.value.length();
+            return i;
         }
+<<<<<<< HEAD:Lex.cpp
 
+=======
+//        }
+        
+>>>>>>> 969763693a9780aac011b17adea552778ad95418:js_in_c_lex/Lex.cpp
     }
 
     if(!isalpha(str.at(i)) && str.at(i) != '_'){
