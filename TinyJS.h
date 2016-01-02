@@ -14,10 +14,13 @@ class TinyJS {
 private:
     string file;
     Lex lex;
+    vector<Var *> scopes;
 public:
     TinyJS(string& file){
         this->file=file;
     }
+    Var *root;
+
     bool run();
     bool init();
     Scope* getVarDef(vector<Token>& tokens, const string& scopeName);

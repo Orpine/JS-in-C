@@ -4,6 +4,8 @@
 
 #ifndef TINYJS_VAR_H
 #define TINYJS_VAR_H
+
+#include <unordered_map>
 class Var;
 class VarLink;
 typedef void (*Callback)(Var *var, void *data);
@@ -128,7 +130,8 @@ class Scope{
      * */
 public:
     std::string name;
-    vector<VarLink*> vars;
+    map<std::string, shared_ptr<VarLink> > vars;
+//    vector<VarLink*> vars;
     Scope(string name){
         this->name=name;
     }

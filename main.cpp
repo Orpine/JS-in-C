@@ -55,7 +55,7 @@
 using namespace std;
 
 int main() {
-    string file="E:\\CppWorkspace\\TinyJS\\Test4JS\\test1.js";
+    string file="./Test4JS/test1.js";
     TinyJS tinyJS(file);
     tinyJS.run();
 
