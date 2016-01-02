@@ -23,7 +23,7 @@ int main(int argc, const char * argv[]) {
     
     
     
-    for (int i = 1; i < 37; ++i) {
+    for (int i = 20; i < 21; ++i) {
         wholeText = "";
         if (i < 10) {
             filePath = path + "0" + to_string(i) + ".js";

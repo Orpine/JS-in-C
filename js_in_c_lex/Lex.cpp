@@ -10,7 +10,15 @@
 #include <regex>
 
 //the tokens that can appear before numbers with '+/-' prefix
-set<TOKEN_TYPES> tokenBeforePrefix{TK_L_BRACKET, TK_ASSIGN, TK_PLUS_EQUAL, TK_MINUS_EQUAL, TK_MULTI_EQUAL, TK_DIV_EQUAL, TK_MOD_EQUAL, TK_AND_EQUAL,
+set<TOKEN_TYPES> tokenBeforePrefix{
+    TK_L_BRACKET,
+    TK_ASSIGN,
+    TK_PLUS_EQUAL,
+    TK_MINUS_EQUAL,
+    TK_MULTI_EQUAL,
+    TK_DIV_EQUAL,
+    TK_MOD_EQUAL,
+    TK_AND_EQUAL,
     TK_OR_EQUAL,
     TK_L_EQUAL,
     TK_G_EQUAL, };
