@@ -23,8 +23,43 @@ set<TOKEN_TYPES> tokenBeforePrefix{
     TK_L_EQUAL,
     TK_G_EQUAL, };
 
+Lex::Lex(){
+    initialTokenMap();
+    
+    token.type = TK_NOT_VALID;
+    lastTk.type = TK_NOT_VALID;
+    
+    tokenStart = 0;
+    tokenEnd = 0;
+    tokenLastEnd = 0;
+    posNow = 0;
+}
 
-int Lex::getNextToken(string &str, int startPos, Token &tk, Token &lastTk) {
+Lex::Lex(const string &str) : originalStr(str) {
+    initialTokenMap();
+    token.type = TK_NOT_VALID;
+    lastTk.type = TK_NOT_VALID;
+    
+    tokenLastEnd = 0;
+    
+    tokenStart = 0;
+    tokenEnd = (int)str.length();
+    posNow = 0;
+    //        getLex();
+};
+
+void Lex::reset(){
+    token.type = TK_NOT_VALID;
+    lastTk.type = TK_NOT_VALID;
+    
+    tokenLastEnd = 0;
+    
+    posNow = 0;
+}
+
+
+
+int Lex::getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk) {
     regex floatExp("^[\\+-]?((([1-9]\\d*)?\\.\\d+|[1-9]\\d*(\\.\\d*)?)[eE][\\+-]?[1-9]\\d*|([1-9]\\d*)?\\.\\d+)");
     regex decExp("^([\\+-]?[1-9]\\d*|0)");
     regex octalExp("^0[1-7][0-7]*");
@@ -228,6 +263,38 @@ int Lex::getNextToken(string &str, int startPos, Token &tk, Token &lastTk) {
 }
 
 
+void Lex::match(TOKEN_TYPES expected_token) {
+    if (token.type != expected_token) {
+        cout << "Got " << getTokenStr(token.type) << " expected " << getTokenStr(expected_token) << endl;
+    }
+    getNextToken();
+}
+
+string Lex::getTokenStr(TOKEN_TYPES tkType) {
+    if (invTokenMap.find(tkType) != invTokenMap.end()) {
+        return invTokenMap[tkType];
+    }
+    
+    return string("?[" + to_string(tkType) + "]");
+}
+
+//string Lex::getSubString(int pos) {
+//    return __1::basic_string<char, char_traits<char>, allocator<char>>();
+//}
+
+Lex *Lex::getSubLex(int lastPosition) {
+    if (lastPosition > tokenLastEnd) {
+        cout << "getSubLex error: lastPositin > tokenLastEnd" << endl;
+        return nullptr;
+    }
+    return new Lex(originalStr.substr(lastPosition, tokenLastEnd - lastPosition+1));
+    
+}
+
+//string Lex::getPosition(int pos) {
+//    return __1::basic_string<char, char_traits<char>, allocator<char>>();
+//}
+
 void Lex::initialTokenMap() {
     // value properties
     tokenMap["Infinity"] = TK_INFINITY;
@@ -260,25 +327,25 @@ void Lex::initialTokenMap() {
     tokenMap["super"] = TK_SUPER;
     tokenMap["delete"] = TK_DELETE;
     tokenMap["typeof"] = TK_TYPEOF;
-
+    
     //done
     tokenMap["++"] = TK_PLUS_PLUS;
     tokenMap["--"] = TK_MINUS_MINUS;
     tokenMap["+"] = TK_PLUS;
     tokenMap["-"] = TK_MINUS;
     tokenMap["~"] = TK_BITWISE_NOT;
-
+    
     tokenMap["!"] = TK_NOT;
     tokenMap["*"] = TK_MULTIPLY;
     tokenMap["/"] = TK_DIVIDE;
     tokenMap["%"] = TK_MOD;
-
+    
     tokenMap["**"] = TK_EXPONENT;
     tokenMap["<"] = TK_LESS;
     tokenMap[">"] = TK_GREATER;
     tokenMap["<="] = TK_L_EQUAL;
     tokenMap[">="] = TK_G_EQUAL;
-
+    
     tokenMap["=="] = TK_EQUAL;
     tokenMap["!="] = TK_N_EQUAL;
     tokenMap["==="] = TK_TYPEEQUAL;
@@ -301,7 +368,7 @@ void Lex::initialTokenMap() {
     tokenMap["&="] = TK_AND_EQUAL;
     tokenMap["^="] = TK_XOR_EQUAL;
     tokenMap["|="] = TK_OR_EQUAL;
-
+    
     tokenMap["true"] = TK_TRUE;
     tokenMap["false"] = TK_FALSE;
     //done
@@ -316,27 +383,94 @@ void Lex::initialTokenMap() {
     tokenMap[":"] = TK_COLON;
     tokenMap[","] = TK_COMMA;
     tokenMap["?"] = TK_QUESTION_MARK;
+    
+    // value properties
+    invTokenMap[TK_INFINITY] = "Infinity";
+    invTokenMap[TK_NAN] = "NaN";
+    invTokenMap[TK_UNDEIFNED] = "undefined";
+    invTokenMap[TK_NULL] = "null";
+    //fundamental objects
+    invTokenMap[TK_OBJECT] = "Object";
+    //control flow
+    invTokenMap[TK_BREAK] = "break";
+    invTokenMap[TK_CONTINUE] = "continue";
+    invTokenMap[TK_EMPTY] = "Empty";
+    invTokenMap[TK_IF] = "if";
+    invTokenMap[TK_ELSE] = "else";
+    invTokenMap[TK_SWITCH] = "switch";
+    invTokenMap[TK_DO] = "do";
+    invTokenMap[TK_WHILE] = "while";
+    invTokenMap[TK_FOR] = "for";
+    //declarations
+    invTokenMap[TK_VAR] = "var";
+    invTokenMap[TK_LET] = "let";
+    invTokenMap[TK_CONST] = "const";
+    //functions and classes
+    invTokenMap[TK_FUNCTION] = "function";
+    invTokenMap[TK_RETURN] = "return";
+    invTokenMap[TK_CLASS] = "class";
+    //expressions
+    invTokenMap[TK_THIS] = "this";
+    invTokenMap[TK_NEW] = "new";
+    invTokenMap[TK_SUPER] = "super";
+    invTokenMap[TK_DELETE] = "delete";
+    invTokenMap[TK_TYPEOF] = "typeof";
+    
+    //done
+    invTokenMap[TK_PLUS_PLUS] = "++";
+    invTokenMap[TK_MINUS_MINUS] = "--";
+    invTokenMap[TK_PLUS] = "+";
+    invTokenMap[TK_MINUS] = "-";
+    invTokenMap[TK_BITWISE_NOT] = "~";
+    
+    invTokenMap[TK_NOT] = "!";
+    invTokenMap[TK_MULTIPLY] = "*";
+    invTokenMap[TK_DIVIDE] = "/";
+    invTokenMap[TK_MOD] = "%";
+    
+    invTokenMap[TK_EXPONENT] = "**";
+    invTokenMap[TK_LESS] = "<";
+    invTokenMap[TK_GREATER] = ">";
+    invTokenMap[TK_L_EQUAL] = "<=";
+    invTokenMap[TK_G_EQUAL] = ">=";
+    
+    invTokenMap[TK_EQUAL] = "==";
+    invTokenMap[TK_N_EQUAL] = "!=";
+    invTokenMap[TK_TYPEEQUAL] = "===";
+    invTokenMap[TK_N_TYPEEQUAL] = "!==";
+    invTokenMap[TK_L_SHIFT] = "<<";
+    invTokenMap[TK_R_SHIFT] = ">>";
+    invTokenMap[TK_BITWISE_AND] = "&";
+    invTokenMap[TK_BITWISE_OR] = "|";
+    invTokenMap[TK_BITWISE_XOR] = "^";
+    invTokenMap[TK_AND_AND] = "&&";
+    invTokenMap[TK_OR_OR] = "||";
+    invTokenMap[TK_ASSIGN] = "=";
+    invTokenMap[TK_MULTI_EQUAL] = "*=";
+    invTokenMap[TK_DIV_EQUAL] = "/=";
+    invTokenMap[TK_MOD_EQUAL] = "%=";
+    invTokenMap[TK_PLUS_EQUAL] = "+=";
+    invTokenMap[TK_MINUS_EQUAL] = "-=";
+    invTokenMap[TK_L_SHIFT_EQUAL] = "<<=";
+    invTokenMap[TK_R_SHIFT_EQUAL] = ">>=";
+    invTokenMap[TK_AND_EQUAL] = "&=";
+    invTokenMap[TK_XOR_EQUAL] = "^=";
+    invTokenMap[TK_OR_EQUAL] = "|=";
+    
+    invTokenMap[TK_TRUE] = "true";
+    invTokenMap[TK_FALSE] = "false";
+    //done
+    invTokenMap[TK_L_SQUARE_BRACKET] = "[";
+    invTokenMap[TK_R_SQUARE_BRACKET] = "]";
+    invTokenMap[TK_R_BRACKET] = "(";
+    invTokenMap[TK_R_BRACKET] = ")";
+    invTokenMap[TK_L_LARGE_BRACKET] = "{";
+    invTokenMap[TK_R_BRACKET] = "}";
+    invTokenMap[TK_DOT] = ".";
+    invTokenMap[TK_SEMICOLON] = ";";
+    invTokenMap[TK_COLON] = ":";
+    invTokenMap[TK_COMMA] = ",";
+    invTokenMap[TK_QUESTION_MARK] = "?";
+
 }
 
-void Lex::match(TOKEN_TYPES expected_token) {
-    if (token != expected_token) {
-
-    }
-    getNextToken();
-}
-
-string Lex::getTokenStr(TOKEN_TYPES token) {
-    return __1::basic_string<char, char_traits<char>, allocator<char>>();
-}
-
-string Lex::getSubString(int pos) {
-    return __1::basic_string<char, char_traits<char>, allocator<char>>();
-}
-
-Lex *Lex::getSubLex(int lastPosition) {
-    return nullptr;
-}
-
-string Lex::getPosition(int pos) {
-    return __1::basic_string<char, char_traits<char>, allocator<char>>();
-}

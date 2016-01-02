@@ -22,7 +22,7 @@ using namespace std;
 
 //不能识别的运算符有： >>>, >>>=
 enum TOKEN_TYPES {
-    TK_START,
+//    TK_START,
     TK_NOT_VALID,
 
     TK_IDENTIFIER = 256,
@@ -123,44 +123,44 @@ public:
 class Lex {
 private:
     unordered_map<string, TOKEN_TYPES> tokenMap;
-    int getNextToken(string &str, int startPos, Token &tk, Token &lastTk);
-    Token lastTk;
+    unordered_map<TOKEN_TYPES, string> invTokenMap;
+    int getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk);
     //return this token's endpos + 1
-
+    
 public:
-    bool tkgot = false;
+//    bool tkgot = false;
     string originalStr = "";
     vector<Token> tokens;
+    
+    Token lastTk;
+    Token token;
+//    string tokenStr;
 
-    Lex() { initialTokenMap(); tk.type = TK_START; };
-
-    Lex(const string &str) : originalStr(str) {
-        initialTokenMap();
-        token.type = TK_START;
-//        getLex();
-    };
-
+    int tokenStart;
+    int tokenEnd;
+    
+    int tokenLastEnd;
+    int posNow = 0;
+    
+    
+    Lex();
+    Lex(const string &str);
+    
     void initialTokenMap();
 
     void setString(const string &str) {
         originalStr = str;
     }
 
-    Token token;
-    int tokenStart;
-    int tokenEnd;
-    int tokenLastEnd;
-    string tokenStr;
-
-    int posNow = 0;
-
 
     void match(TOKEN_TYPES expected_token);
-//    static string getTokenStr(TOKEN_TYPES token);
-//    void reset;
+    string getTokenStr(TOKEN_TYPES token);
+    void reset();
 
     string getSubString(int pos);
-    Lex *getSubLex(int lastPosition);
+    Lex* getSubLex(int lastPosition);
+    //return [lastPosition, tokenLastEnd]
+    
     string getPosition(int pos = -1);
 
     void getNextToken() {
@@ -169,7 +169,10 @@ public:
             return;
         }
         lastTk = token;
-        posNow = getNextToken(originalStr, posNow, token, lastTk);
+        if (posNow > 0) {
+            tokenLastEnd = posNow - 1;
+        }
+        posNow = getNextTokenInner(originalStr, posNow, token, lastTk);
     }
 
     void getLex() {
@@ -181,12 +184,12 @@ public:
         int oldPos = 0;
         int pos = 0;
         Token tk;
-        tk.type = TK_START;
+        tk.type = TK_NOT_VALID;
         Token lastTk;
         while (pos != originalStr.length()) {
             oldPos = pos;
             lastTk = tk;
-            pos = getNextToken(originalStr, pos, tk, lastTk);
+            pos = getNextTokenInner(originalStr, pos, tk, lastTk);
             if (pos == -1) {
                 cout << "Lex error: " << originalStr.substr(oldPos) << endl;
                 return;
@@ -195,7 +198,6 @@ public:
                 tokens.push_back(tk);
             }
         }
-        tkgot = true;
     }
 };
 
