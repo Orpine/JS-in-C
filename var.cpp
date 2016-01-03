@@ -1,5 +1,6 @@
 #ifndef _var_cpp_
 #define _var_cpp_
+
 #include <string>
 #include <stdlib.h>
 #include <assert.h>
@@ -8,170 +9,180 @@
 #include "Lex.h"
 #include "var.h"
 
-VarLink::VarLink(Var *var,const std::string &name){
-    this->name=name;
-    this->prevSibling=0;
-    this->nextSibling=0;
-    this->var=var->ref();
-    this->owned=false;
+VarLink::VarLink(Var *var, const std::string &name) {
+    this->name = name;
+    this->prevSibling = 0;
+    this->nextSibling = 0;
+    this->var = var->ref();
+    this->owned = false;
 }
-VarLink::VarLink(const VarLink& link){
-    this->name=link.name;
-    this->prevSibling=0;
-    this->nextSibling=0;
-    this->var=link.var->ref();
-    this->owned=false;
+
+VarLink::VarLink(const VarLink &link) {
+    this->name = link.name;
+    this->prevSibling = 0;
+    this->nextSibling = 0;
+    this->var = link.var->ref();
+    this->owned = false;
 }
-VarLink::~VarLink(){
+
+VarLink::~VarLink() {
     var->unref();
 }
-void VarLink::replaceWith(Var* var){
-    Var* temp=this->var;
-    this->var=var->ref();
+
+void VarLink::replaceWith(Var *var) {
+    Var *temp = this->var;
+    this->var = var->ref();
     temp->unref();
 }
-void VarLink::replaceWith(VarLink* varLink){
-    if(varLink)
+
+void VarLink::replaceWith(VarLink *varLink) {
+    if (varLink)
         replaceWith(varLink->var);
     else
         replaceWith(new Var());
 }
-int VarLink::getIntName(){
+
+int VarLink::getIntName() {
     return atoi(name.c_str());
 }
-void VarLink::setIntNmae(int idx){
+
+void VarLink::setIntNmae(int idx) {
     std::stringstream ss;
     std::string str;
-    ss<<idx;
-    ss>>str;
-    name=str;
+    ss << idx;
+    ss >> str;
+    name = str;
 }
 
-void Var::init(){
-    refNum=0;
-    firstChild=0;
-    lastChild=0;
-    type=0;
-    intData=0;
-    doubleData=0;
-    stringData="";
-    callback=0;
-    callbackData=0;
-    native=false;
+void Var::init() {
+    refNum = 0;
+    firstChild = 0;
+    lastChild = 0;
+    type = 0;
+    intData = 0;
+    doubleData = 0;
+    stringData = "";
+    callback = 0;
+    callbackData = 0;
+    native = false;
 }
 
-Var* Var::ref(){
+Var *Var::ref() {
     refNum++;
     return this;
 }
 
-void Var::unref(){
-    if(--refNum==0)
+void Var::unref() {
+    if (--refNum == 0)
         delete this;
 }
 
-Var::Var(){
+Var::Var() {
     init();
-    type=VAR_UNDEFINED;
+    type = VAR_UNDEFINED;
 }
 
-Var::Var(const std::string &varData, int varType){
+Var::Var(const std::string &varData, int varType) {
     init();
-    type=varType;
-    switch(type){
+    type = varType;
+    switch (type) {
         case VAR_DOUBLE:
-            doubleData=atof(varData.c_str());
+            doubleData = atof(varData.c_str());
             break;
         case VAR_INTEGER:
-            intData=atoi(varData.c_str());
+            intData = atoi(varData.c_str());
             break;
         case VAR_BOOLEAN:
-            if(varData=="false")
-                intData=0;
+            if (varData == "false")
+                intData = 0;
             else
-                intData=1;
+                intData = 1;
             break;
         default:
-            stringData=varData;
+            stringData = varData;
     }
 }
-Var::Var(double varData){
+
+Var::Var(double varData) {
     init();
     setDouble(varData);
 }
-Var::Var(int varData){
+
+Var::Var(int varData) {
     init();
     setInt(varData);
 }
-Var::Var(bool varData){
+
+Var::Var(bool varData) {
     init();
     setBool(varData);
 }
-Var::~Var(){
+
+Var::~Var() {
     removeAllChildren();
 }
 
 
-
-int Var::getInt(){
-    if(isInt()) return intData;
-    if(isDouble()) return (int)doubleData;
+int Var::getInt() {
+    if (isInt()) return intData;
+    if (isDouble()) return (int) doubleData;
     return 0;
 }
 
-double Var::getDouble(){
-    if(isInt()) return (double)intData;
-    if(isDouble()) return doubleData;
+double Var::getDouble() {
+    if (isInt()) return (double) intData;
+    if (isDouble()) return doubleData;
     return 0;
 }
 
-bool Var::getBool(){
-    return (intData!=0);
+bool Var::getBool() {
+    return (intData != 0);
 }
 
-std::string Var::getString(){
+std::string Var::getString() {
     std::stringstream ss;
     std::string ret;
-    if(isInt()){
-        ss<<intData;
-        ss>>ret;
+    if (isInt()) {
+        ss << intData;
+        ss >> ret;
         return ret;
     }
-    if(isDouble()){
-        ss<<doubleData;
-        ss>>ret;
+    if (isDouble()) {
+        ss << doubleData;
+        ss >> ret;
         return ret;
     }
-    if(isBoolean()){
-        if(intData!=0)
+    if (isBoolean()) {
+        if (intData != 0)
             return "true";
         else
             return "false";
     }
-    if(isNull()){
+    if (isNull()) {
         return "null";
     }
-    if(isUndefined()){
+    if (isUndefined()) {
         return "undefined";
     }
     return stringData;
 }
-std::string Var::getParsableString(){
-    if(isNumber()||isBoolean())
+
+std::string Var::getParsableString() {
+    if (isNumber() || isBoolean())
         return getString();
-    if(isFunction()){
+    if (isFunction()) {
         stringstream ss;
-        ss<< "function (";
-        VarLink *link=firstChild;
-        while(link){
-            ss<< link->name;
-            if(link->nextSibling) ss<<",";
-            link=link->nextSibling;
+        ss << "function (";
+        auto link = firstChild;
+        while (link) {
+            ss << link->name;
+            if (link->nextSibling) ss << ",";
+            link = link->nextSibling;
         }
-        ss<<") "<<getString();
+        ss << ") " << getString();
         return ss.str();
     }
-    if(isString()){
+    if (isString()) {
         stringstream ss;
         //TODO
         return getString();
@@ -179,130 +190,169 @@ std::string Var::getParsableString(){
 
 }
 
-void Var::setInt(int _int){
-    type=VAR_INTEGER;
-    intData=_int;
-    doubleData=0;
-    stringData="";
+void Var::setInt(int _int) {
+    type = VAR_INTEGER;
+    intData = _int;
+    doubleData = 0;
+    stringData = "";
 }
-void Var::setDouble(double _double){
-    type=VAR_DOUBLE;
-    intData=0;
-    doubleData=_double;
-    stringData="";
+
+void Var::setDouble(double _double) {
+    type = VAR_DOUBLE;
+    intData = 0;
+    doubleData = _double;
+    stringData = "";
 }
-void Var::setBool(bool _bool){
-    type=VAR_BOOLEAN;
-    intData=_bool;
-    doubleData=0;
-    stringData="";
+
+void Var::setBool(bool _bool) {
+    type = VAR_BOOLEAN;
+    intData = _bool;
+    doubleData = 0;
+    stringData = "";
 }
-void Var::setString(const std::string& _string){
-    type=VAR_STRING;
-    intData=0;
-    doubleData=0;
-    stringData=_string;
+
+void Var::setString(const std::string &_string) {
+    type = VAR_STRING;
+    intData = 0;
+    doubleData = 0;
+    stringData = _string;
 }
-void Var::setUndefined(){
-    type=VAR_UNDEFINED;
-    intData=0;
-    doubleData=0;
-    stringData="";
+
+void Var::setUndefined() {
+    type = VAR_UNDEFINED;
+    intData = 0;
+    doubleData = 0;
+    stringData = "";
     removeAllChildren();
 }
-void Var::setArray(){
-    type=VAR_ARRAY;
-    intData=0;
-    doubleData=0;
-    stringData="";
+
+void Var::setArray() {
+    type = VAR_ARRAY;
+    intData = 0;
+    doubleData = 0;
+    stringData = "";
     removeAllChildren();
 }
-bool Var::equals(Var* var){
-    Var* temp=mathOp(var,TK_EQUAL);
-    bool ret=temp->getBool();
+
+bool Var::equals(Var *var) {
+    Var *temp = mathOp(var, TK_EQUAL);
+    bool ret = temp->getBool();
     delete temp;
     return ret;
 }
 
-Var *Var::mathOp(Var *b, int op){
-    Var* a=this;
-    if(op==TK_TYPEEQUAL||op==TK_N_TYPEEQUAL){
-        bool eql=(a->type==b->type);
-        if(eql){
-            Var *temp=a->mathOp(b,TK_EQUAL);
-            if(!temp->getBool()) eql=false;
+Var *Var::mathOp(Var *b, TOKEN_TYPES op) {
+    Var *a = this;
+    if (op == TK_TYPEEQUAL || op == TK_N_TYPEEQUAL) {
+        bool eql = (a->type == b->type);
+        if (eql) {
+            Var *temp = a->mathOp(b, TK_EQUAL);
+            if (!temp->getBool()) eql = false;
             delete temp;
         }
 
-        if(op==TK_TYPEEQUAL)
+        if (op == TK_TYPEEQUAL)
             return new Var(eql);
         else
             return new Var(!eql);
     }
 
-    if(a->isUndefined()&&b->isUndefined()){
-        if(op==TK_EQUAL)return new Var("true",VAR_BOOLEAN);
-        if(op==TK_N_EQUAL)return new Var("false",VAR_BOOLEAN);
+    if (a->isUndefined() && b->isUndefined()) {
+        if (op == TK_EQUAL)return new Var("true", VAR_BOOLEAN);
+        if (op == TK_N_EQUAL)return new Var("false", VAR_BOOLEAN);
         return new Var();
     }
-    else if((a->isNumber()||a->isUndefined())&&(b->isNumber()||b->isUndefined())){
-        if(!a->isDouble()&&!b->isDouble()){
-            int aa=a->getInt();
-            int bb=b->getInt();
-            switch(op){
-                case TK_PLUS:return new Var(aa+bb);
-                case TK_MINUS:return new Var(aa-bb);
-                case TK_MULTIPLY:return new Var(aa*bb);
-                case TK_DIVIDE:return new Var(aa/bb);
-                case TK_BITWISE_AND:return new Var(aa&bb);
-                case TK_BITWISE_OR:return new Var(aa|bb);
-                case TK_BITWISE_XOR:return new Var(aa^bb);
-                case TK_MOD:return new Var(aa%bb);
-                case TK_EQUAL:return new Var(aa==bb);
-                case TK_N_EQUAL:return new Var(aa!=bb);
-                case TK_LESS:return new Var(aa<bb);
-                case TK_GREATER:return new Var(aa>bb);
-                case TK_L_EQUAL:return new Var(aa<=bb);
-                case TK_G_EQUAL:return new Var(aa>=bb);
+    else if ((a->isNumber() || a->isUndefined()) && (b->isNumber() || b->isUndefined())) {
+        if (!a->isDouble() && !b->isDouble()) {
+            int aa = a->getInt();
+            int bb = b->getInt();
+            switch (op) {
+                case TK_PLUS:
+                    return new Var(aa + bb);
+                case TK_MINUS:
+                    return new Var(aa - bb);
+                case TK_MULTIPLY:
+                    return new Var(aa * bb);
+                case TK_DIVIDE:
+                    return new Var(aa / bb);
+                case TK_BITWISE_AND:
+                    return new Var(aa & bb);
+                case TK_BITWISE_OR:
+                    return new Var(aa | bb);
+                case TK_BITWISE_XOR:
+                    return new Var(aa ^ bb);
+                case TK_MOD:
+                    return new Var(aa % bb);
+                case TK_EQUAL:
+                    return new Var(aa == bb);
+                case TK_N_EQUAL:
+                    return new Var(aa != bb);
+                case TK_LESS:
+                    return new Var(aa < bb);
+                case TK_GREATER:
+                    return new Var(aa > bb);
+                case TK_L_EQUAL:
+                    return new Var(aa <= bb);
+                case TK_G_EQUAL:
+                    return new Var(aa >= bb);
                 default:;//fault TODO
             }
         }
-        else{
-            double aa=a->getDouble();
-            double bb=b->getDouble();
-            switch(op){
-                case TK_PLUS:return new Var(aa+bb);
-                case TK_MINUS:return new Var(aa-bb);
-                case TK_MULTIPLY:return new Var(aa*bb);
-                case TK_DIVIDE:return new Var(aa/bb);
-                case TK_EQUAL:return new Var(aa==bb);
-                case TK_N_EQUAL:return new Var(aa!=bb);
-                case TK_LESS:return new Var(aa<bb);
-                case TK_GREATER:return new Var(aa>bb);
-                case TK_L_EQUAL:return new Var(aa<=bb);
-                case TK_G_EQUAL:return new Var(aa>=bb);
+        else {
+            double aa = a->getDouble();
+            double bb = b->getDouble();
+            switch (op) {
+                case TK_PLUS:
+                    return new Var(aa + bb);
+                case TK_MINUS:
+                    return new Var(aa - bb);
+                case TK_MULTIPLY:
+                    return new Var(aa * bb);
+                case TK_DIVIDE:
+                    return new Var(aa / bb);
+                case TK_EQUAL:
+                    return new Var(aa == bb);
+                case TK_N_EQUAL:
+                    return new Var(aa != bb);
+                case TK_LESS:
+                    return new Var(aa < bb);
+                case TK_GREATER:
+                    return new Var(aa > bb);
+                case TK_L_EQUAL:
+                    return new Var(aa <= bb);
+                case TK_G_EQUAL:
+                    return new Var(aa >= bb);
                 default:;//fault TODO
             }
         }
     }
-    else if(a->isArray()||a->isObject()){
-        switch(op){
-            case TK_EQUAL: return new Var(a==b);
-            case TK_N_EQUAL:return new Var(a!=b);
+    else if (a->isArray() || a->isObject()) {
+        switch (op) {
+            case TK_EQUAL:
+                return new Var(a == b);
+            case TK_N_EQUAL:
+                return new Var(a != b);
             default:;//fault TODO
         }
     }
-    else{
-        string aa=a->getString();
-        string bb=b->getString();
-        switch(op){
-            case TK_PLUS:return new Var(aa+bb,VAR_STRING);
-            case TK_EQUAL:return new Var(aa==bb);
-            case TK_N_EQUAL:return new Var(aa!=bb);
-            case TK_LESS:return new Var(aa<bb);
-            case TK_GREATER:return new Var(aa>bb);
-            case TK_L_EQUAL:return new Var(aa<=bb);
-            case TK_G_EQUAL:return new Var(aa>=bb);
+    else {
+        string aa = a->getString();
+        string bb = b->getString();
+        switch (op) {
+            case TK_PLUS:
+                return new Var(aa + bb, VAR_STRING);
+            case TK_EQUAL:
+                return new Var(aa == bb);
+            case TK_N_EQUAL:
+                return new Var(aa != bb);
+            case TK_LESS:
+                return new Var(aa < bb);
+            case TK_GREATER:
+                return new Var(aa > bb);
+            case TK_L_EQUAL:
+                return new Var(aa <= bb);
+            case TK_G_EQUAL:
+                return new Var(aa >= bb);
             default:;//fault TODO
         }
     }
@@ -310,73 +360,79 @@ Var *Var::mathOp(Var *b, int op){
     return 0;
 }
 
-VarLink* Var::findChild(const std::string& childName){
-    VarLink* v=firstChild;
-    while(v){
-        if(v->name==childName)
+shared_ptr<VarLink> Var::findChild(const std::string &childName) {
+    auto v = firstChild;
+    while (v) {
+        if (v->name == childName)
             return v;
-        v=v->nextSibling;
+        v = v->nextSibling;
     }
     return 0;
 }
-VarLink* Var::findChildOrCreate(const std::string& childName,int childType){
-    VarLink* v=findChild(childName);
-    if(v)
+
+shared_ptr<VarLink> Var::findChildOrCreate(const std::string &childName, int childType) {
+    auto v = findChild(childName);
+    if (v)
         return v;
     else
-        return addChild(childName,new Var("",childType));
+        return addChild(childName, new Var("", childType));
 }
-VarLink* Var::findChildByPath(const std::string& path){
-    int pos=path.find('.');
-    if(pos==string::npos)
+
+shared_ptr<VarLink> Var::findChildByPath(const std::string &path) {
+    int pos = path.find('.');
+    if (pos == string::npos)
         return findChildOrCreate(path);
     else
-        return findChildOrCreate(path.substr(0,pos),VAR_OBJECT)->var->findChildByPath(path.substr(pos+1));
+        return findChildOrCreate(path.substr(0, pos), VAR_OBJECT)->var->findChildByPath(path.substr(pos + 1));
 }
-VarLink* Var::addChild(const std::string& childName,Var* child){
-    if(isUndefined())
-        type=VAR_OBJECT;
-    if(!child)
-        child=new Var();
 
-    VarLink* link=new VarLink(child,childName);
-    link->owned=true;
-    if(lastChild){
-        lastChild->nextSibling=link;
-        link->prevSibling=lastChild;
-        lastChild=link;
+shared_ptr<VarLink> Var::addChild(const std::string &childName, Var *child) {
+    if (isUndefined())
+        type = VAR_OBJECT;
+    if (!child)
+        child = new Var();
+
+    shared_ptr<VarLink> link(new VarLink(child, childName));
+    link->owned = true;
+    if (lastChild) {
+        lastChild->nextSibling = link;
+        link->prevSibling = lastChild;
+        lastChild = link;
     }
-    else{
-        firstChild=link;
-        lastChild=link;
+    else {
+        firstChild = link;
+        lastChild = link;
     }
     return link;
 
 }
-VarLink* Var::addUniqueChild(const std::string& childName,Var* child){
-    if(!child)
-        child=new Var();
 
-    VarLink* link=findChild(childName);
-    if(!link){
-        link=addChild(childName,child);
+shared_ptr<VarLink> Var::addUniqueChild(const std::string &childName, Var *child) {
+    if (!child)
+        child = new Var();
+
+    auto link = findChild(childName);
+    if (!link) {
+        link = addChild(childName, child);
     }
-    else{
+    else {
         link->replaceWith(child);
     }
     return link;
 }
-void Var::removeChild(Var* child){
-    VarLink* link=firstChild;
-    while(link){
-        if(link->var==child)
+
+void Var::removeChild(Var *child) {
+    auto link = firstChild;
+    while (link) {
+        if (link->var == child)
             break;
-        link=link->nextSibling;
+        link = link->nextSibling;
     }
     removeLink(link);
 }
-void Var::removeLink(VarLink* link){
-    if(!link) return;
+
+void Var::removeLink(shared_ptr<VarLink> link) {
+    if (!link) return;
     if (link->nextSibling)
         link->nextSibling->prevSibling = link->prevSibling;
     if (link->prevSibling)
@@ -385,118 +441,128 @@ void Var::removeLink(VarLink* link){
         lastChild = link->prevSibling;
     if (firstChild == link)
         firstChild = link->nextSibling;
-    delete link;
+    link = nullptr;
 }
-void Var::removeAllChildren(){
-    VarLink* link=firstChild;
-    while(link){
-        VarLink* temp=link;
-        link=link->nextSibling;
-        delete temp;
+
+void Var::removeAllChildren() {
+    auto link = firstChild;
+    while (link) {
+        auto temp = link;
+        link = link->nextSibling;
+        temp.reset();
     }
-    firstChild=0;
-    lastChild=0;
+    firstChild = nullptr;
+    lastChild = nullptr;
 }
-Var *Var::getAtIndex(int idx){
+
+Var *Var::getAtIndex(int idx) {
     stringstream ss;
     string strIdx;
-    ss<<idx;
-    ss>>strIdx;
-    VarLink* link=findChild(strIdx);
-    if(link)
+    ss << idx;
+    ss >> strIdx;
+    auto link = findChild(strIdx);
+    if (link)
         return link->var;
     else
-        return new Var("",VAR_NULL);
+        return new Var("", VAR_NULL);
 }
-void Var::setAtIndex(int idx, Var *var){
+
+void Var::setAtIndex(int idx, Var *var) {
     stringstream ss;
     string strIdx;
-    ss<<idx;
-    ss>>strIdx;
-    VarLink* link=findChild(strIdx);
-    if(link)
+    ss << idx;
+    ss >> strIdx;
+    auto link = findChild(strIdx);
+    if (link)
         link->replaceWith(var);
-    else{
-        addChild(strIdx,var);
+    else {
+        addChild(strIdx, var);
     }
 }
+
 //
-int Var::getArrayLength(){
-    int max=-1;
-    if(!isArray()){
+int Var::getArrayLength() {
+    int max = -1;
+    if (!isArray()) {
         return 0;
     }
-    VarLink* link=firstChild;
-    while(link){
-        int idx=atoi(link->name.c_str());
-        if (idx>max)
-            max=idx;
-        link=link->nextSibling;
+    auto link = firstChild;
+    while (link) {
+        int idx = atoi(link->name.c_str());
+        if (idx > max)
+            max = idx;
+        link = link->nextSibling;
     }
-    return max+1;
+    return max + 1;
 
 }
-int Var::getNumberOfChildren(){
-    int count=0;
-    VarLink* link=firstChild;
-    while(link){
+
+int Var::getNumberOfChildren() {
+    int count = 0;
+    auto link = firstChild;
+    while (link) {
         count++;
-        link=link->nextSibling;
+        link = link->nextSibling;
     }
     return count;
 }
-Var* Var::getReturnVar(){
+
+Var *Var::getReturnVar() {
     return getParameter(JS_IN_C_RETURN_VAR);
 }
-void Var::setReturnVar(Var* var){
+
+void Var::setReturnVar(Var *var) {
     findChildOrCreate(JS_IN_C_RETURN_VAR)->replaceWith(var);
 }
-Var* Var::getParameter(const std::string& name){
+
+Var *Var::getParameter(const std::string &name) {
     return findChildOrCreate(name)->var;
 }
 
-void Var::copyValueFrom(Var* var){
-    if(var){
-        stringData=var->stringData;
-        intData=var->intData;
-        doubleData=var->doubleData;
-        type=var->type;
+void Var::copyValueFrom(Var *var) {
+    if (var) {
+        stringData = var->stringData;
+        intData = var->intData;
+        doubleData = var->doubleData;
+        type = var->type;
 
         removeAllChildren();
-        VarLink* link=var->firstChild;
-        while(link){
-            Var* copiedVar=link->var->copyThis();
-            addChild(link->name,copiedVar);
-            link=link->nextSibling;
+        auto link = var->firstChild;
+        while (link) {
+            Var *copiedVar = link->var->copyThis();
+            addChild(link->name, copiedVar);
+            link = link->nextSibling;
         }
     }
-    else{
+    else {
         setUndefined();
     }
 }
-Var *Var::copyThis(){
-    Var* ret=new Var();
 
-    ret->stringData=stringData;
-    ret->intData=intData;
-    ret->doubleData=doubleData;
-    ret->type=type;
+Var *Var::copyThis() {
+    Var *ret = new Var();
 
-    VarLink* link=firstChild;
-    while(link){
-        Var* copiedVar=link->var->copyThis();
+    ret->stringData = stringData;
+    ret->intData = intData;
+    ret->doubleData = doubleData;
+    ret->type = type;
 
-        ret->addChild(link->name,copiedVar);
-        link=link->nextSibling;
+    auto link = firstChild;
+    while (link) {
+        Var *copiedVar = link->var->copyThis();
+
+        ret->addChild(link->name, copiedVar);
+        link = link->nextSibling;
     }
     return ret;
 }
-void Var:: copy(Var* var){
-    this->stringData=var->stringData;
-    this->stringData=var->stringData;
-    this->stringData=var->stringData;
-    this->stringData=var->stringData;
-    this->type=var->type;
+
+void Var::copy(Var *var) {
+    this->stringData = var->stringData;
+    this->stringData = var->stringData;
+    this->stringData = var->stringData;
+    this->stringData = var->stringData;
+    this->type = var->type;
 
 }
 //int main(){

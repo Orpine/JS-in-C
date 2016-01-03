@@ -38,10 +38,10 @@ protected:
 
 public:
     int type;
-    VarLink *firstChild;
-    VarLink *lastChild;
-    vector<Token*> valueTokens;
-    vector<VarLink*> args;
+    shared_ptr<VarLink> firstChild;
+    shared_ptr<VarLink> lastChild;
+//    vector<Token*> valueTokens;
+//    vector<VarLink*> args;
     int len;
 
     Var();//create undefined
@@ -62,7 +62,7 @@ public:
     bool isNative(){return(native);}
     bool isUndefined(){return(type==VAR_UNDEFINED);}
     bool isNull(){return(type==VAR_NULL);}
-    bool isBasic(){return(firstChild==0);}
+    bool isBasic(){return(firstChild==nullptr);}
 
     int getInt();
     bool getBool();
@@ -77,18 +77,18 @@ public:
     void setArray();
     bool equals(Var *var);
 
-    Var *mathOp(Var *b, int op);
+    Var *mathOp(Var *b, TOKEN_TYPES op);
     void copyValueFrom(Var *var);
     Var *copyThis();
     void copy(Var* var);
 
-    VarLink* findChild(const std::string& childName);
-    VarLink* findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
-    VarLink* findChildByPath(const std::string& path);
-    VarLink* addChild(const std::string& childName,Var* child=NULL);
-    VarLink* addUniqueChild(const std::string& childName,Var* child=NULL);
+    shared_ptr<VarLink> findChild(const std::string& childName);
+    shared_ptr<VarLink> findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
+    shared_ptr<VarLink> findChildByPath(const std::string& path);
+    shared_ptr<VarLink> addChild(const std::string& childName,Var* child=NULL);
+    shared_ptr<VarLink> addUniqueChild(const std::string& childName,Var* child=NULL);
     void removeChild(Var* child);
-    void removeLink(VarLink* link);
+    void removeLink(shared_ptr<VarLink> link);
     void removeAllChildren();
     Var *getAtIndex(int idx); //
     void setAtIndex(int idx, Var *var); //
@@ -104,16 +104,17 @@ public:
     int getRefNum(){return refNum;}
 };
 
+const std::string ANONYMOUS = "";
 
 class VarLink{
 public:
     std::string name;
-    VarLink *prevSibling;
-    VarLink *nextSibling;
+    shared_ptr<VarLink> prevSibling;
+    shared_ptr<VarLink> nextSibling;
     Var *var;
     bool owned;
 
-    VarLink(Var *var,const std::string &name);
+    VarLink(Var *var,const std::string &name = ANONYMOUS);
     VarLink(const VarLink& link);//copy constructor
     ~VarLink();
     void replaceWith(Var* var);

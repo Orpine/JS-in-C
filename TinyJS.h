@@ -10,11 +10,31 @@
 #include <vector>
 using namespace std;
 
+enum STATE {
+    RUNNING,
+    SKIPPING,
+    BREAKING
+};
+
 class TinyJS {
 private:
     string file;
-    Lex lex;
+    Lex *lex;
     vector<Var *> scopes;
+
+    void eval(STATE& state);
+    void block(STATE& state);
+    VarLink* ternary(STATE& state);
+    VarLink* logic(STATE& state);
+    VarLink* condition(STATE& state);
+    VarLink* shift(STATE& state);
+    VarLink* expression(STATE& state);
+    shared_ptr<VarLink> term(STATE& state);
+    shared_ptr<VarLink> unary(STATE& state);
+    shared_ptr<VarLink> factor(STATE& state);
+
+    shared_ptr<VarLink> findVar(const string &varName);
+
 public:
     TinyJS(string& file){
         this->file=file;
