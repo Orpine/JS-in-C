@@ -1,11 +1,19 @@
 //
 // Created by user on 2015/12/30.
 //
+#ifndef _var_h_
+#define _var_h_
 
-#ifndef TINYJS_VAR_H
-#define TINYJS_VAR_H
 
 #include <unordered_map>
+#include <memory>
+#include <string>
+#include <stdlib.h>
+#include <assert.h>
+#include <sstream>
+
+#include <iostream>
+#include "Lex.h"
 class Var;
 class VarLink;
 typedef void (*Callback)(Var *var, void *data);
@@ -38,8 +46,8 @@ protected:
 
 public:
     int type;
-    shared_ptr<VarLink> firstChild;
-    shared_ptr<VarLink> lastChild;
+    std::shared_ptr<VarLink> firstChild;
+    std::shared_ptr<VarLink> lastChild;
 //    vector<Token*> valueTokens;
 //    vector<VarLink*> args;
     int len;
@@ -82,13 +90,13 @@ public:
     Var *copyThis();
     void copy(Var* var);
 
-    shared_ptr<VarLink> findChild(const std::string& childName);
-    shared_ptr<VarLink> findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
-    shared_ptr<VarLink> findChildByPath(const std::string& path);
-    shared_ptr<VarLink> addChild(const std::string& childName,Var* child=NULL);
-    shared_ptr<VarLink> addUniqueChild(const std::string& childName,Var* child=NULL);
+    std::shared_ptr<VarLink> findChild(const std::string& childName);
+    std::shared_ptr<VarLink> findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
+    std::shared_ptr<VarLink> findChildByPath(const std::string& path);
+    std::shared_ptr<VarLink> addChild(const std::string& childName,Var* child=NULL);
+    std::shared_ptr<VarLink> addUniqueChild(const std::string& childName,Var* child=NULL);
     void removeChild(Var* child);
-    void removeLink(shared_ptr<VarLink> link);
+    void removeLink(std::shared_ptr<VarLink> link);
     void removeAllChildren();
     Var *getAtIndex(int idx); //
     void setAtIndex(int idx, Var *var); //
@@ -109,8 +117,8 @@ const std::string ANONYMOUS = "";
 class VarLink{
 public:
     std::string name;
-    shared_ptr<VarLink> prevSibling;
-    shared_ptr<VarLink> nextSibling;
+    std::shared_ptr<VarLink> prevSibling;
+    std::shared_ptr<VarLink> nextSibling;
     Var *var;
     bool owned;
 
@@ -131,11 +139,11 @@ class Scope{
      * */
 public:
     std::string name;
-    map<std::string, shared_ptr<VarLink> > vars;
+    map<std::string, std::shared_ptr<VarLink> > vars;
 //    vector<VarLink*> vars;
     Scope(string name){
         this->name=name;
     }
 };
 
-#endif //TINYJS_VAR_H
+#endif 

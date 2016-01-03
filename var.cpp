@@ -1,26 +1,18 @@
-#ifndef _var_cpp_
-#define _var_cpp_
 
-#include <string>
-#include <stdlib.h>
-#include <assert.h>
-#include <sstream>
-#include <iostream>
-#include "Lex.h"
 #include "var.h"
 
 VarLink::VarLink(Var *var, const std::string &name) {
     this->name = name;
-    this->prevSibling = 0;
-    this->nextSibling = 0;
+    this->prevSibling = nullptr;
+    this->nextSibling = nullptr;
     this->var = var->ref();
     this->owned = false;
 }
 
 VarLink::VarLink(const VarLink &link) {
     this->name = link.name;
-    this->prevSibling = 0;
-    this->nextSibling = 0;
+    this->prevSibling = nullptr;
+    this->nextSibling = nullptr;
     this->var = link.var->ref();
     this->owned = false;
 }
@@ -56,8 +48,8 @@ void VarLink::setIntNmae(int idx) {
 
 void Var::init() {
     refNum = 0;
-    firstChild = 0;
-    lastChild = 0;
+    firstChild = nullptr;
+    lastChild = nullptr;
     type = 0;
     intData = 0;
     doubleData = 0;
@@ -360,17 +352,17 @@ Var *Var::mathOp(Var *b, TOKEN_TYPES op) {
     return 0;
 }
 
-shared_ptr<VarLink> Var::findChild(const std::string &childName) {
+std::shared_ptr<VarLink> Var::findChild(const std::string &childName) {
     auto v = firstChild;
     while (v) {
         if (v->name == childName)
             return v;
         v = v->nextSibling;
     }
-    return 0;
+    return nullptr;
 }
 
-shared_ptr<VarLink> Var::findChildOrCreate(const std::string &childName, int childType) {
+std::shared_ptr<VarLink> Var::findChildOrCreate(const std::string &childName, int childType) {
     auto v = findChild(childName);
     if (v)
         return v;
@@ -378,7 +370,7 @@ shared_ptr<VarLink> Var::findChildOrCreate(const std::string &childName, int chi
         return addChild(childName, new Var("", childType));
 }
 
-shared_ptr<VarLink> Var::findChildByPath(const std::string &path) {
+std::shared_ptr<VarLink> Var::findChildByPath(const std::string &path) {
     int pos = path.find('.');
     if (pos == string::npos)
         return findChildOrCreate(path);
@@ -386,13 +378,13 @@ shared_ptr<VarLink> Var::findChildByPath(const std::string &path) {
         return findChildOrCreate(path.substr(0, pos), VAR_OBJECT)->var->findChildByPath(path.substr(pos + 1));
 }
 
-shared_ptr<VarLink> Var::addChild(const std::string &childName, Var *child) {
+std::shared_ptr<VarLink> Var::addChild(const std::string &childName, Var *child) {
     if (isUndefined())
         type = VAR_OBJECT;
     if (!child)
         child = new Var();
 
-    shared_ptr<VarLink> link(new VarLink(child, childName));
+    std::shared_ptr<VarLink> link(new VarLink(child, childName));
     link->owned = true;
     if (lastChild) {
         lastChild->nextSibling = link;
@@ -407,7 +399,7 @@ shared_ptr<VarLink> Var::addChild(const std::string &childName, Var *child) {
 
 }
 
-shared_ptr<VarLink> Var::addUniqueChild(const std::string &childName, Var *child) {
+std::shared_ptr<VarLink> Var::addUniqueChild(const std::string &childName, Var *child) {
     if (!child)
         child = new Var();
 
@@ -431,7 +423,7 @@ void Var::removeChild(Var *child) {
     removeLink(link);
 }
 
-void Var::removeLink(shared_ptr<VarLink> link) {
+void Var::removeLink(std::shared_ptr<VarLink> link) {
     if (!link) return;
     if (link->nextSibling)
         link->nextSibling->prevSibling = link->prevSibling;
@@ -521,10 +513,7 @@ Var *Var::getParameter(const std::string &name) {
 
 void Var::copyValueFrom(Var *var) {
     if (var) {
-        stringData = var->stringData;
-        intData = var->intData;
-        doubleData = var->doubleData;
-        type = var->type;
+        copy(var);
 
         removeAllChildren();
         auto link = var->firstChild;
@@ -542,10 +531,7 @@ void Var::copyValueFrom(Var *var) {
 Var *Var::copyThis() {
     Var *ret = new Var();
 
-    ret->stringData = stringData;
-    ret->intData = intData;
-    ret->doubleData = doubleData;
-    ret->type = type;
+    ret->copy(this);
 
     auto link = firstChild;
     while (link) {
@@ -559,9 +545,8 @@ Var *Var::copyThis() {
 
 void Var::copy(Var *var) {
     this->stringData = var->stringData;
-    this->stringData = var->stringData;
-    this->stringData = var->stringData;
-    this->stringData = var->stringData;
+    this->intData = var->intData;
+    this->doubleData = var->doubleData;
     this->type = var->type;
 
 }
@@ -580,4 +565,3 @@ void Var::copy(Var *var) {
 //    std::cout<<array->getArrayLength();
 //
 //}
-#endif
