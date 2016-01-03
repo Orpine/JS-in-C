@@ -27,7 +27,7 @@ void VarLink::replaceWith(Var *var) {
     temp->unref();
 }
 
-void VarLink::replaceWith(VarLink *varLink) {
+void VarLink::replaceWith(shared_ptr<VarLink> varLink) {
     if (varLink)
         replaceWith(varLink->var);
     else

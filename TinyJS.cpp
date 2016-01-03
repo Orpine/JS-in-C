@@ -7,7 +7,6 @@
 #include <assert.h>
 
 using namespace std;
-#define clean(x) {if (x && !x->owned) {delete x;}}
 //bool TinyJS::run() {
 //    if (!init()) {
 //        return false;
@@ -130,7 +129,8 @@ using namespace std;
 //}
 
 void TinyJS::execute() {
-    lex = new Lex(this->file);
+    lex = new Lex(this->code);
+    lex->getNextToken();
     scopes.clear();
     scopes.push_back(root);
     STATE state = RUNNING;
@@ -234,6 +234,146 @@ void TinyJS::eval(STATE &state) {
 
 
 
+
+
+shared_ptr<VarLink> TinyJS::base(STATE &state) {
+    auto lhs = ternary(state);
+    if (lex->token.type == TK_ASSIGN || lex->token.type == TK_PLUS_EQUAL || lex->token.type == TK_MINUS_EQUAL) {
+        if (state == RUNNING && !lhs->owned) {
+            assert(lhs->name.length() != 0);
+            lhs = root->addUniqueChild(lhs->name, lhs->var);
+        }
+        auto op = lex->token.type;
+        lex->match(op);
+        auto rhs = base(state);
+        if (state == RUNNING) {
+            if (op == TK_ASSIGN) {
+                lhs->replaceWith(rhs);
+            } else {
+                lhs->replaceWith(lhs->var->mathOp(rhs->var, op == TK_PLUS_EQUAL ? TK_PLUS : TK_MINUS));
+            }
+        }
+    }
+    return lhs;
+}
+
+shared_ptr<VarLink> TinyJS::ternary(STATE &state) {
+    auto lhs = logic(state);
+    while (lex->token.type == TK_QUESTION_MARK) {
+        lex->match(TK_QUESTION_MARK);
+        if (state == RUNNING) {
+            STATE skipping = SKIPPING;
+            if (lhs->var->getBool()) {
+                lhs = logic(state);
+                lex->match(TK_COLON);
+                logic(skipping);
+            } else {
+                logic(skipping);
+                lex->match(TK_COLON);
+                lhs = logic(state);
+            }
+        } else {
+            lhs = logic(state);
+            lex->match(TK_COLON);
+            lhs = logic(state);
+        }
+    }
+    return lhs;
+}
+
+shared_ptr<VarLink> TinyJS::logic(STATE &state) {
+    auto lhs = compare(state);
+    while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
+            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
+        auto op = lex->token.type;
+        bool getBool = false, shortCircuit = false;
+
+        if (state == RUNNING) {
+            if (lex->token.type == TK_AND_AND) {
+                shortCircuit = !lhs->var->getBool();
+                getBool = true;
+            } else if (lex->token.type == TK_OR_OR) {
+                shortCircuit = lhs->var->getBool();
+                getBool = true;
+            }
+        }
+
+        STATE skipping = SKIPPING;
+        auto rhs = compare(shortCircuit ? state : skipping);
+
+        if (state == RUNNING && !shortCircuit) {
+            if (getBool) {
+                lhs->replaceWith(new Var(lhs->var->getBool()));
+                rhs->replaceWith(new Var(rhs->var->getBool()));
+            }
+            lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
+        }
+    }
+    return lhs;
+}
+
+shared_ptr<VarLink> TinyJS::compare(STATE &state) {
+    auto lhs = shift(state);
+    while (lex->token.type == TK_EQUAL || lex->token.type == TK_N_EQUAL ||
+            lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
+            lex->token.type == TK_LESS || lex->token.type == TK_L_EQUAL ||
+            lex->token.type == TK_GREATER || lex->token.type == TK_G_EQUAL) {
+        auto op = lex->token.type;
+        lex->match(op);
+        auto rhs = shift(state);
+        if (state == RUNNING) {
+            lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
+        }
+    }
+    return lhs;
+}
+
+shared_ptr<VarLink> TinyJS::shift(STATE &state) {
+    auto ret = expression(state);
+    if (lex->token.type == TK_L_SHIFT || lex->token.type == TK_R_SHIFT) {
+        auto op = lex->token.type;
+        lex->match(op);
+        auto opNum = expression(state);
+        if (state == RUNNING) {
+            if (op == TK_L_SHIFT) {
+                ret->var->setInt(ret->var->getInt() << opNum->var->getInt());
+            } else if (op == TK_R_SHIFT) {
+                ret->var->setInt(ret->var->getInt() >> opNum->var->getInt());
+            }
+        }
+    }
+    return ret;
+}
+
+shared_ptr<VarLink> TinyJS::expression(STATE &state) {
+    bool negative = false;
+    if (lex->token.type == TK_MINUS) {
+        lex->match(TK_MINUS);
+        negative = true;
+    }
+    auto lhs = term(state);
+    if (state == RUNNING && negative) {
+        Var zero(0);
+        lhs->replaceWith(zero.mathOp(lhs->var, TK_MINUS));
+    }
+    while (lex->token.type == TK_PLUS || lex->token.type == TK_MINUS || lex->token.type == TK_PLUS_PLUS || lex->token.type == TK_MINUS_MINUS) {
+        auto op = lex->token.type;
+        lex->match(lex->token.type);
+        if (op == TK_PLUS || op == TK_MINUS) {
+            auto rhs = term(state);
+            if (state == RUNNING) {
+                lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
+            }
+        } else {
+            if (state == RUNNING) {
+                Var one(1);
+                lhs->replaceWith(lhs->var->mathOp(&one, op == TK_PLUS_PLUS ? TK_PLUS : TK_MINUS));
+            }
+        }
+    }
+    return lhs;
+}
+
 shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
     auto lhs = unary(state);
     while (lex->token.type == TK_MULTIPLY || lex->token.type == TK_DIVIDE || lex->token.type == TK_MOD) {
@@ -244,6 +384,7 @@ shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
             lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
         }
     }
+    return lhs;
 }
 
 shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
@@ -262,6 +403,7 @@ shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
 shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     if (lex->token.type == TK_L_BRACKET) {
         lex->match(TK_L_BRACKET);
+        // TODO: bracket parse
         auto ret = base(state);
         lex->match(TK_R_BRACKET);
         return ret;
@@ -297,7 +439,8 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         lex->match(TK_IDENTIFIER);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
-                ret = callFunction(state, ret, parent);
+                // TODO: function call
+//                ret = callFunction(state, ret, parent);
             } else if (lex->token.type == TK_DOT) { // . means record access
                 // TODO: record access
 //                lex->match(TK_DOT);
@@ -310,23 +453,28 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         }
         if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
             lex->match(TK_L_SQUARE_BRACKET);
-            auto idx = base(state);
+            // TODO: array access
+//            auto idx = base(state);
             lex->match(TK_R_SQUARE_BRACKET);
-            if (state == RUNNING) {
-                ret = ret->var->findChildOrCreate(idx->var->getString());
-            }
-            clean(idx);
+//            if (state == RUNNING) {
+//                ret = ret->var->findChildOrCreate(idx->var->getString());
+//            }
         }
         return ret;
     } else if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array declaration
         // TODO: array declaration
+        return nullptr;
     } else if (lex->token.type == TK_FUNCTION) { // function declaration
-        auto func = parseFuncDefinition();
-        assert(func->name == ANONYMOUS);
-        return func;
+        // TODO: function parse
+//        auto func = parseFuncDefinition();
+//        assert(func->name == ANONYMOUS);
+//        return func;
+        return nullptr;
     } else if (lex->token.type == TK_NEW) { // new an object
         // TODO: new an object
+        return nullptr;
     }
+    return nullptr;
 }
 
 

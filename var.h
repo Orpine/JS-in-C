@@ -112,7 +112,8 @@ public:
     int getRefNum(){return refNum;}
 };
 
-const std::string ANONYMOUS = "";
+const std::string ANONYMOUS_VAR = "";
+const std::string VAR_BLANK = "";
 
 class VarLink{
 public:
@@ -122,11 +123,11 @@ public:
     Var *var;
     bool owned;
 
-    VarLink(Var *var,const std::string &name = ANONYMOUS);
+    VarLink(Var *var,const std::string &name = ANONYMOUS_VAR);
     VarLink(const VarLink& link);//copy constructor
     ~VarLink();
     void replaceWith(Var* var);
-    void replaceWith(VarLink* varLink);
+    void replaceWith(shared_ptr<VarLink> varLink);
     int getIntName();
     void setIntNmae(int idx);
 };
