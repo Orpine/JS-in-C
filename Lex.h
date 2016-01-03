@@ -122,8 +122,8 @@ public:
 
 class Lex {
 private:
-    unordered_map<string, TOKEN_TYPES> tokenMap;
-    unordered_map<TOKEN_TYPES, string> invTokenMap;
+    map<string, TOKEN_TYPES> tokenMap;
+    map<TOKEN_TYPES, string> invTokenMap;
     int getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk);
     //return this token's endpos + 1
     
@@ -157,22 +157,28 @@ public:
     string getTokenStr(TOKEN_TYPES token);
     void reset();
 
-    string getSubString(int pos);
+//    string getSubString(int pos);
     Lex* getSubLex(int lastPosition);
     //return [lastPosition, tokenLastEnd]
     
-    string getPosition(int pos = -1);
+//    string getPosition(int pos = -1);
 
     void getNextToken() {
-        if (posNow == originalStr.length()) {
-            token.type = TK_EOF;
-            return;
-        }
+        
         lastTk = token;
         if (posNow > 0) {
             tokenLastEnd = posNow - 1;
         }
-        posNow = getNextTokenInner(originalStr, posNow, token, lastTk);
+        
+        token.type = TK_NOT_VALID;
+        while (posNow != originalStr.length() && token.type == TK_NOT_VALID) {
+            posNow = getNextTokenInner(originalStr, posNow, token, lastTk);
+        }
+        if (posNow == originalStr.length()) {
+            token.type = TK_EOF;
+            return;
+        }
+
     }
 
     void getLex() {
