@@ -14,7 +14,8 @@ using namespace std;
 enum STATE {
     RUNNING,
     SKIPPING,
-    BREAKING
+    BREAKING,
+    CONTINUE
 };
 
 class TinyJS {
@@ -23,9 +24,9 @@ private:
     Lex *lex;
     vector<Var *> scopes;
 
-    void eval(STATE& state);
+    void statement(STATE& state);
     void block(STATE& state);
-    shared_ptr<VarLink> base(STATE& state);
+    shared_ptr<VarLink> eval(STATE& state);
     shared_ptr<VarLink> ternary(STATE& state);
     shared_ptr<VarLink> logic(STATE& state);
     shared_ptr<VarLink> compare(STATE& state);

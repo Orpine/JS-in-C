@@ -139,7 +139,7 @@ void TinyJS::execute() {
     }
 }
 
-void TinyJS::eval(STATE &state) {
+void TinyJS::statement(STATE &state) {
     if (lex->token.type == TK_IDENTIFIER ||
         lex->token.type == TK_DEC_INT ||
         lex->token.type == TK_HEX_INT ||
@@ -147,7 +147,7 @@ void TinyJS::eval(STATE &state) {
         lex->token.type == TK_FLOAT ||
         lex->token.type == TK_STRING ||
         lex->token.type == TK_MINUS) {
-        base(state);
+        eval(state);
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
         block(state);
@@ -158,7 +158,7 @@ void TinyJS::eval(STATE &state) {
     } else if (lex->token.type == TK_IF) {
         lex->match(TK_IF);
         lex->match(TK_L_BRACKET);
-        auto cond = base(state);
+        auto cond = eval(state);
         lex->match(TK_R_BRACKET);
         STATE skipping = SKIPPING;
         eval(state == RUNNING && cond->var->getBool() ? state : skipping);
@@ -167,14 +167,100 @@ void TinyJS::eval(STATE &state) {
             eval(state == RUNNING && cond->var->getBool() ? skipping : state);
         }
     } else if (lex->token.type == TK_WHILE) {
+        lex->match(TK_WHILE);
+
+        lex->match(TK_L_BRACKET);
+
+        auto condStart = lex->posNow;
+        auto cond = eval(state);
+        auto condLex = lex->getSubLex(condStart);
+
+        lex->match(TK_R_BRACKET);
+
+        auto bodyStart = lex->posNow;
+        STATE skipping = SKIPPING;
+        statement(skipping);
+        auto bodyLex = lex->getSubLex(bodyStart);
+
+        if (state == RUNNING) {
+            auto oriLex = lex;
+            while (state == RUNNING && cond->var->getBool()) {
+                lex = bodyLex;
+                lex->reset();
+                statement(state);
+                if (state == CONTINUE) {
+                    state = RUNNING;
+                }
+                lex = condLex;
+                lex->reset();
+                cond = eval(state);
+            }
+            if (state == BREAKING) {
+                state = RUNNING;
+            }
+            lex = oriLex;
+        }
+        delete condLex;
+        delete bodyLex;
 
     } else if (lex->token.type == TK_FOR) {
+        lex->match(TK_FOR);
+        lex->match(TK_L_BRACKET);
+
+        statement(state);
+
+        auto condStart = lex->posNow;
+        auto cond = eval(state);
+        auto condLex = lex->getSubLex(condStart);
+
+        lex->match(TK_SEMICOLON);
+
+        auto updateStart = lex->posNow;
+        auto skipping = SKIPPING;
+        // note here we can use eval since here must be a side-effect statement
+        eval(skipping);
+        auto updateLex = lex->getSubLex(updateStart);
+
+        lex->match(TK_R_BRACKET);
+
+        auto bodyStart = lex->posNow;
+        statement(skipping);
+        auto bodyLex = lex->getSubLex(bodyStart);
+
+
+        if (state == RUNNING) {
+            auto oriLex = lex;
+            while (state == RUNNING && cond->var->getBool()) {
+                lex = bodyLex;
+                lex->reset();
+                statement(state);
+                if (state == CONTINUE) {
+                    state = RUNNING;
+                }
+
+                lex = updateLex;
+                lex->reset();
+                eval(state);
+
+                lex = condLex;
+                lex->reset();
+                cond = eval(state);
+            }
+            if (state == BREAKING) {
+                state = RUNNING;
+            }
+            lex = oriLex;
+        }
+
+        delete condLex;
+        delete updateLex;
+        delete bodyLex;
 
     } else if (lex->token.type == TK_RETURN) {
         lex->match(TK_RETURN);
         shared_ptr<VarLink> ret = nullptr;
         if (lex->token.type != TK_SEMICOLON) {
-            ret = base(state);
+            ret = eval(state);
         }
         if (state == RUNNING) {
             auto retVar = scopes.back()->findChild(JS_RETURN_VAR);
@@ -190,12 +276,13 @@ void TinyJS::eval(STATE &state) {
 
     } else if (lex->token.type == TK_EOF) {
 
-    } else if (lex->token.type == TK_BREAK){
+    } else if (lex->token.type == TK_BREAK) {
         state = BREAKING;
+    } else if (lex->token.type == TK_CONTINUE) {
+        state = CONTINUE;
     } else {
         assert(0);
     }
-
 }
 
 
@@ -256,7 +343,7 @@ void TinyJS::eval(STATE &state) {
 
 
 
-shared_ptr<VarLink> TinyJS::base(STATE &state) {
+shared_ptr<VarLink> TinyJS::eval(STATE &state) {
     auto lhs = ternary(state);
     if (lex->token.type == TK_ASSIGN || lex->token.type == TK_PLUS_EQUAL || lex->token.type == TK_MINUS_EQUAL) {
         if (state == RUNNING && !lhs->owned) {
@@ -265,7 +352,7 @@ shared_ptr<VarLink> TinyJS::base(STATE &state) {
         }
         auto op = lex->token.type;
         lex->match(op);
-        auto rhs = base(state);
+        auto rhs = eval(state);
         if (state == RUNNING) {
             if (op == TK_ASSIGN) {
                 lhs->replaceWith(rhs);
@@ -304,7 +391,7 @@ shared_ptr<VarLink> TinyJS::ternary(STATE &state) {
 shared_ptr<VarLink> TinyJS::logic(STATE &state) {
     auto lhs = compare(state);
     while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
-            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
+           lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
         auto op = lex->token.type;
         bool getBool = false, shortCircuit = false;
 
@@ -335,9 +422,9 @@ shared_ptr<VarLink> TinyJS::logic(STATE &state) {
 shared_ptr<VarLink> TinyJS::compare(STATE &state) {
     auto lhs = shift(state);
     while (lex->token.type == TK_EQUAL || lex->token.type == TK_N_EQUAL ||
-            lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
-            lex->token.type == TK_LESS || lex->token.type == TK_L_EQUAL ||
-            lex->token.type == TK_GREATER || lex->token.type == TK_G_EQUAL) {
+           lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
+           lex->token.type == TK_LESS || lex->token.type == TK_L_EQUAL ||
+           lex->token.type == TK_GREATER || lex->token.type == TK_G_EQUAL) {
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = shift(state);
@@ -376,7 +463,8 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
         Var zero(0);
         lhs->replaceWith(zero.mathOp(lhs->var, TK_MINUS));
     }
-    while (lex->token.type == TK_PLUS || lex->token.type == TK_MINUS || lex->token.type == TK_PLUS_PLUS || lex->token.type == TK_MINUS_MINUS) {
+    while (lex->token.type == TK_PLUS || lex->token.type == TK_MINUS || lex->token.type == TK_PLUS_PLUS ||
+           lex->token.type == TK_MINUS_MINUS) {
         auto op = lex->token.type;
         lex->match(lex->token.type);
         if (op == TK_PLUS || op == TK_MINUS) {
@@ -423,11 +511,13 @@ shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
 shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     if (lex->token.type == TK_L_BRACKET) {
         lex->match(TK_L_BRACKET);
-        auto ret = base(state);
+        auto ret = eval(state);
         lex->match(TK_R_BRACKET);
         return ret;
-    } else if (lex->token.type == TK_DEC_INT || lex->token.type == TK_HEX_INT || lex->token.type == TK_OCTAL_INT || lex->token.type == TK_FLOAT) {
-        auto ret = make_shared<VarLink>(new Var(lex->token.type == TK_FLOAT ? lex->token.getFloatData() : lex->token.getIntData()));
+    } else if (lex->token.type == TK_DEC_INT || lex->token.type == TK_HEX_INT || lex->token.type == TK_OCTAL_INT ||
+               lex->token.type == TK_FLOAT) {
+        auto ret = make_shared<VarLink>(
+                new Var(lex->token.type == TK_FLOAT ? lex->token.getFloatData() : lex->token.getIntData()));
         lex->match(lex->token.type);
         return ret;
     } else if (lex->token.type == TK_STRING) {
@@ -497,13 +587,14 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 }
 
 
-
 void TinyJS::block(STATE &state) {
     lex->match(TK_L_LARGE_BRACKET);
-    while (lex->token.type != TK_EOF && lex->token.type != TK_R_LARGE_BRACKET && state == RUNNING) {
-        eval(state);
-    }
-    if (state != RUNNING) {
+    if (state == RUNNING) {
+        while (lex->token.type != TK_EOF && lex->token.type != TK_R_LARGE_BRACKET) {
+            statement(state);
+        }
+        lex->match(TK_R_LARGE_BRACKET);
+    } else {
         int bracket = 1;
         while (lex->token.type != TK_EOF && bracket) {
             if (lex->token.type == TK_L_LARGE_BRACKET) {
@@ -548,7 +639,7 @@ void TinyJS::block(STATE &state) {
 //}
 
 shared_ptr<VarLink> TinyJS::findVar(const string &varName) {
-    for (int i = (int)scopes.size() - 1; i >= 0; i--) {
+    for (int i = (int) scopes.size() - 1; i >= 0; i--) {
         auto var = scopes[i]->findChild(varName);
         if (var) {
             return var;

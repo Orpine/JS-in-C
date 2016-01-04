@@ -1,4 +1,3 @@
-
 #include "var.h"
 
 VarLink::VarLink(Var *var, const std::string &name) {
@@ -179,7 +178,8 @@ std::string Var::getParsableString() {
         //TODO
         return getString();
     }
-
+    assert(0);
+    return "";
 }
 
 void Var::setInt(int _int) {
@@ -527,19 +527,21 @@ void Var::copyValueFrom(Var *var) {
         setUndefined();
     }
 }
-void Var::addChilds(Var* parent){
-    if(parent){
-        auto link=parent->firstChild;
 
-        while(link){
-            if (link->var!=this){
-                addChild(link->name,link->var->ref());
+void Var::addChilds(Var *parent) {
+    if (parent) {
+        auto link = parent->firstChild;
+
+        while (link) {
+            if (link->var != this) {
+                addChild(link->name, link->var->ref());
 
             }
-            link=link->nextSibling;
+            link = link->nextSibling;
         }
     }
 }
+
 Var *Var::copyThis() {
     Var *ret = new Var();
 
