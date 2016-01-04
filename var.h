@@ -17,7 +17,7 @@
 class Var;
 class VarLink;
 typedef void (*Callback)(Var *var, void *data);
-#define JS_IN_C_RETURN_VAR "return"
+#define JS_RETURN_VAR "__builtin__return"
 enum VAR_TYPES {
     VAR_UNDEFINED,
     VAR_NULL,

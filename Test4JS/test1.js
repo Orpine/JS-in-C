@@ -1,1 +1,3 @@
-result= 2 == 7 / 3 ? 2 + 3 * 4 / 5 : (1 - 2) * 3 + 4 ;
+// comparison
+var a = 42;
+result = a==42;

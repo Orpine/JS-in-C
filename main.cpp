@@ -17,7 +17,7 @@ using namespace std;
 int main() {
     string file="./Test4JS/test1.js";
     TinyJS tinyJS(file);
-    tinyJS.root->addChild("result", new Var(0));
+//    tinyJS.root->addChild("result", new Var(0));
     tinyJS.execute();
     cout << tinyJS.root->findChild("result")->var->getInt() << endl;
     return 0;

@@ -150,22 +150,42 @@ void TinyJS::eval(STATE &state) {
         base(state);
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
-        lex->match(TK_L_LARGE_BRACKET);
-//        bool executeDup = execute;
-//        block(executeDup);
-        lex->match(TK_R_LARGE_BRACKET);
+        block(state);
     } else if (lex->token.type == TK_SEMICOLON) {
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_VAR) {
-
+        lex->match(TK_VAR);
     } else if (lex->token.type == TK_IF) {
-
+        lex->match(TK_IF);
+        lex->match(TK_L_BRACKET);
+        auto cond = base(state);
+        lex->match(TK_R_BRACKET);
+        STATE skipping = SKIPPING;
+        eval(state == RUNNING && cond->var->getBool() ? state : skipping);
+        if (lex->token.type == TK_ELSE) {
+            lex->match(TK_ELSE);
+            eval(state == RUNNING && cond->var->getBool() ? skipping : state);
+        }
     } else if (lex->token.type == TK_WHILE) {
 
     } else if (lex->token.type == TK_FOR) {
 
     } else if (lex->token.type == TK_RETURN) {
-
+        lex->match(TK_RETURN);
+        shared_ptr<VarLink> ret = nullptr;
+        if (lex->token.type != TK_SEMICOLON) {
+            ret = base(state);
+        }
+        if (state == RUNNING) {
+            auto retVar = scopes.back()->findChild(JS_RETURN_VAR);
+            assert(retVar != nullptr);
+            retVar->replaceWith(ret);
+            state = SKIPPING;
+            if (retVar->var->type == VAR_FUNCTION) {
+                retVar->var->addChilds(scopes.back());
+            }
+        }
+        lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_FUNCTION) {
 
     } else if (lex->token.type == TK_EOF) {
@@ -403,7 +423,6 @@ shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
 shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     if (lex->token.type == TK_L_BRACKET) {
         lex->match(TK_L_BRACKET);
-        // TODO: bracket parse
         auto ret = base(state);
         lex->match(TK_R_BRACKET);
         return ret;
