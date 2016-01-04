@@ -17,10 +17,10 @@ int main(){
    std::cout<<array->getArrayLength()<<endl;
    Var *obj=new Var("",VAR_OBJECT);
    auto obj_a=obj->findChildOrCreate("a",VAR_INTEGER);
-   auto obj_b=obj->addChild("b",obj_a->var->ref());
-   std::cout<<obj->findChild("a")->var->getString()<<endl;
-   obj->removeLink(obj_a);
-   std::cout<<obj->findChild("a")<<endl;
-   obj_b->var->addChild("c",new Var(1));
-   std::cout<<obj->findChildByPath("b.c")->var->getInt();
+   auto obj_b=obj->addChild("b",new Var(1));
+   
+   obj_b->var->addChilds(obj);
+   std::cout<<obj_b->var->checkChild("a");
+   
+   return 0;
 }

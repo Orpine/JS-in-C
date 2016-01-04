@@ -500,11 +500,11 @@ int Var::getNumberOfChildren() {
 }
 
 Var *Var::getReturnVar() {
-    return getParameter(JS_IN_C_RETURN_VAR);
+    return getParameter(JS_RETURN_VAR);
 }
 
 void Var::setReturnVar(Var *var) {
-    findChildOrCreate(JS_IN_C_RETURN_VAR)->replaceWith(var);
+    findChildOrCreate(JS_RETURN_VAR)->replaceWith(var);
 }
 
 Var *Var::getParameter(const std::string &name) {
@@ -527,7 +527,19 @@ void Var::copyValueFrom(Var *var) {
         setUndefined();
     }
 }
+void Var::addChilds(Var* parent){
+    if(parent){
+        auto link=parent->firstChild;
 
+        while(link){
+            if (link->var!=this){
+                addChild(link->name,link->var->ref());
+
+            }
+            link=link->nextSibling;
+        }
+    }
+}
 Var *Var::copyThis() {
     Var *ret = new Var();
 

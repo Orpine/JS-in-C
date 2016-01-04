@@ -95,7 +95,9 @@ public:
     std::shared_ptr<VarLink> findChildByPath(const std::string& path);
     std::shared_ptr<VarLink> addChild(const std::string& childName,Var* child=NULL);
     std::shared_ptr<VarLink> addUniqueChild(const std::string& childName,Var* child=NULL);
+    bool checkChild(const std::string& childName){return (bool)findChild(childName);};
     void removeChild(Var* child);
+    void addChilds(Var* parent);
     void removeLink(std::shared_ptr<VarLink> link);
     void removeAllChildren();
     Var *getAtIndex(int idx); //
