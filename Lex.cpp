@@ -378,7 +378,7 @@ void Lex::initialTokenMap() {
     tokenMap["("] = TK_L_BRACKET;
     tokenMap[")"] = TK_R_BRACKET;
     tokenMap["{"] = TK_L_LARGE_BRACKET;
-    tokenMap["}"] = TK_R_BRACKET;
+    tokenMap["}"] = TK_R_LARGE_BRACKET;
     tokenMap["."] = TK_DOT;
     tokenMap[";"] = TK_SEMICOLON;
     tokenMap[":"] = TK_COLON;
