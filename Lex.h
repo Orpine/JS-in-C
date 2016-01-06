@@ -157,7 +157,7 @@ public:
     string getTokenStr(TOKEN_TYPES token);
     void reset();
 
-//    string getSubString(int pos);
+    string getSubString();
     Lex* getSubLex(int lastPosition);
     //return [lastPosition, tokenLastEnd]
     
@@ -169,14 +169,13 @@ public:
         if (posNow > 0) {
             tokenLastEnd = posNow - 1;
         }
-        
+
         token.type = TK_NOT_VALID;
-        while (posNow != originalStr.length() && token.type == TK_NOT_VALID) {
+        while (posNow < originalStr.length() && token.type == TK_NOT_VALID) {
             posNow = getNextTokenInner(originalStr, posNow, token, lastTk);
         }
-        if (posNow == originalStr.length()) {
+        if (posNow == originalStr.length() && token.type == TK_NOT_VALID) {
             token.type = TK_EOF;
-            return;
         }
 
     }

@@ -8,6 +8,7 @@
 #include "var.h"
 #include <string>
 #include <vector>
+#include <stdio.h>
 
 using namespace std;
 
@@ -50,13 +51,7 @@ public:
     Var *root;
 
     void execute();
-
-//    bool run();
-//    bool init();
-//    Scope* getVarDef(vector<Token>& tokens, const string& scopeName);
-//    bool execute(Lex& lex, vector<Scope*>& scope);
-//    Var* statement(Var* var,vector<Token*>& tokens ,vector<Scope*>& currentAR);
-//    Var* findVar(const string& name,vector<Scope*>& currentAR);
+    shared_ptr<VarLink> parseFuncDefinition();
 };
 
 

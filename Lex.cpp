@@ -264,7 +264,7 @@ int Lex::getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk) 
 
 
 void Lex::match(TOKEN_TYPES expected_token) {
-    while(token.type == TK_NOT_VALID)
+//    while(token.type == TK_NOT_VALID)
     if (token.type != expected_token) {
         cout << "Got " << getTokenStr(token.type) << " expected " << getTokenStr(expected_token) << endl;
     }
@@ -275,13 +275,28 @@ string Lex::getTokenStr(TOKEN_TYPES tkType) {
     if (invTokenMap.find(tkType) != invTokenMap.end()) {
         return invTokenMap[tkType];
     }
-    
-    return string("?[" + to_string(tkType) + "]");
+
+    stringstream ss;
+    ss << (int)tkType;
+    return string("?[" + ss.str() + "]");
 }
 
-//string Lex::getSubString(int pos) {
-//    return __1::basic_string<char, char_traits<char>, allocator<char>>();
-//}
+string Lex::getSubString() {
+    int count=1;
+    int index=posNow;
+    while(count>0){
+        if(originalStr[index]=='{'){
+            count++;
+        }
+        if(originalStr[index]=='}'){
+            count--;
+        }
+        index++;
+    }
+    string result = originalStr.substr(posNow, index);
+    posNow=index;
+    return result;
+}
 
 Lex *Lex::getSubLex(int lastPosition) {
     if (lastPosition > tokenLastEnd) {

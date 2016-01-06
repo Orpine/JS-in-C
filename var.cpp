@@ -94,9 +94,9 @@ Var::Var(const std::string &varData, int varType) {
     }
 }
 
-Var::Var(double varData) {
+Var::Var(bool varData) {
     init();
-    setDouble(varData);
+    setBool(varData);
 }
 
 Var::Var(int varData) {
@@ -104,10 +104,13 @@ Var::Var(int varData) {
     setInt(varData);
 }
 
-Var::Var(bool varData) {
+Var::Var(double varData) {
     init();
-    setBool(varData);
+    setDouble(varData);
 }
+
+
+
 
 Var::~Var() {
     removeAllChildren();
