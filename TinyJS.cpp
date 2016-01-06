@@ -7,126 +7,6 @@
 #include <assert.h>
 
 using namespace std;
-//bool TinyJS::run() {
-//    if (!init()) {
-//        return false;
-//    }
-//
-//    vector<Scope *> rootAR;
-//    Scope *rootScope = getVarDef(lex.tokens, "root");
-//    rootAR.push_back(rootScope);
-//    execute(lex, rootAR);
-//
-//    shared_ptr<VarLink> varLink = rootAR[0]->vars["a"];
-//    cout << varLink->name << endl;
-//    cout << varLink->var->getInt() << endl;
-//}
-////
-////Scope *TinyJS::getVarDef(vector<Token> &tokens, const string &scopeName) {
-////    Scope *scope = new Scope(scopeName);
-////
-////    int index = 0;
-////    while (index < tokens.size()) {
-////        if (tokens[index].type == TK_L_BRACKET) {
-////            int pair = 1;
-////            while (pair > 0) {
-////                index++;
-////                if (tokens[index].type == TK_L_BRACKET) pair++;
-////                if (tokens[index].type == TK_R_BRACKET) pair--;
-////            }
-////        }
-////        if (tokens[index].type == TK_L_LARGE_BRACKET) {
-////            int pair = 1;
-////            while (pair > 0) {
-////                index++;
-////                if (tokens[index].type == TK_L_LARGE_BRACKET) pair++;
-////                if (tokens[index].type == TK_R_LARGE_BRACKET) pair--;
-////            }
-////        }
-////        if (tokens[index].type == TK_VAR) {
-////            index++;
-////            int len = 1;
-////            if (tokens[index].type == TK_IDENTIFIER) {
-////                Var *var = new Var();
-////                shared_ptr<VarLink> varLink;
-////                varLink.reset(new VarLink(var, tokens[index].value));
-////                scope->vars[varLink->name] = varLink;
-//////                scope->vars.push_back(varLink);
-////                index++;
-////                len++;
-////                while (tokens[index].type != TK_SEMICOLON) {
-////                    var->valueTokens.push_back(&tokens[index]);
-////                    index++;
-////                    len++;
-////                }
-////                var->len = len;
-////            }
-////            else {
-////                cout << "There should be a variable after symbol var instead of " << tokens[index].value << "." << endl;
-////                return nullptr;
-////            }
-////        }
-////        if (tokens[index].type == TK_FUNCTION) {
-////            index++;
-////            int len = 1;
-////            if (tokens[index].type == TK_IDENTIFIER) {
-////                Var *var = new Var();
-////                var->type = VAR_FUNCTION;
-////                shared_ptr<VarLink> varLink;
-////                varLink.reset(new VarLink(var, tokens[index].value));
-////                scope->vars[varLink->name] = varLink;
-//////                scope->vars.push_back(varLink);
-////
-////                //get the arguments
-////                index++;
-////                len++;
-////                while (tokens[index].type != TK_L_LARGE_BRACKET) {
-////                    if (tokens[index].type == TK_IDENTIFIER) {
-////                        VarLink *arg = new VarLink(nullptr, tokens[index].value);
-////                        var->args.push_back(arg);
-////                    }
-////                    index++;
-////                    len++;
-////                }
-////                //get the tokens of the function
-////                index++;
-////                len++;
-////                while (tokens[index].type != TK_R_LARGE_BRACKET) {
-////                    var->valueTokens.push_back(&tokens[index]);
-////                    index++;
-////                    len++;
-////                }
-////                var->len = len;
-////            }
-////            else {
-////                cout << "Expect a function name." << endl;
-////                return nullptr;
-////            }
-////        }
-////        index++;
-////    }
-////
-////    return scope;
-////}
-//
-//bool TinyJS::execute(Lex &lex, vector<Scope *> &scope) {
-//    int index = 0;
-//    while (index < lex.tokens.size()) {
-//        TOKEN_TYPES type = lex.tokens[index].type;
-//
-//        if (type == TK_VAR) {
-//            Var *var = findVar(lex.tokens[index + 1].value, scope);
-//            index += var->len;
-//            cout << "length is " << var->len << endl;
-//            cout << "size is " << var->valueTokens.size() << endl;
-//            if (var->valueTokens.size() != 0) {
-//                statement(var, var->valueTokens, scope);
-//            }
-//        }
-//
-//        index++;
-//    }
-//}
 
 void TinyJS::execute() {
     lex = new Lex(this->code);
@@ -135,7 +15,7 @@ void TinyJS::execute() {
     scopes.push_back(root);
     STATE state = RUNNING;
     while (lex->token.type != TK_EOF) {
-        eval(state);
+        statement(state);
     }
 }
 
@@ -155,16 +35,29 @@ void TinyJS::statement(STATE &state) {
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_VAR) {
         lex->match(TK_VAR);
+        string varName=lex->token.value;
+        lex->match(TK_IDENTIFIER);
+
+        auto scope=scopes.back();
+        if(lex->token.type==TK_ASSIGN){
+           lex->match(TK_ASSIGN);
+           auto item=eval(state);
+           scope->addUniqueChild(varName, item->var);
+        }else if(lex->token.type==TK_SEMICOLON){
+            scope->addUniqueChild(varName, new Var());
+        }
+
+        lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_IF) {
         lex->match(TK_IF);
         lex->match(TK_L_BRACKET);
         auto cond = eval(state);
         lex->match(TK_R_BRACKET);
         STATE skipping = SKIPPING;
-        eval(state == RUNNING && cond->var->getBool() ? state : skipping);
+        statement(state == RUNNING && cond->var->getBool() ? state : skipping);
         if (lex->token.type == TK_ELSE) {
             lex->match(TK_ELSE);
-            eval(state == RUNNING && cond->var->getBool() ? skipping : state);
+            statement(state == RUNNING && cond->var->getBool() ? skipping : state);
         }
     } else if (lex->token.type == TK_WHILE) {
         lex->match(TK_WHILE);
@@ -187,12 +80,14 @@ void TinyJS::statement(STATE &state) {
             while (state == RUNNING && cond->var->getBool()) {
                 lex = bodyLex;
                 lex->reset();
+                lex->getNextToken();
                 statement(state);
                 if (state == CONTINUE) {
                     state = RUNNING;
                 }
                 lex = condLex;
                 lex->reset();
+                lex->getNextToken();
                 cond = eval(state);
             }
             if (state == BREAKING) {
@@ -233,6 +128,7 @@ void TinyJS::statement(STATE &state) {
             while (state == RUNNING && cond->var->getBool()) {
                 lex = bodyLex;
                 lex->reset();
+                lex->getNextToken();
                 statement(state);
                 if (state == CONTINUE) {
                     state = RUNNING;
@@ -240,10 +136,12 @@ void TinyJS::statement(STATE &state) {
 
                 lex = updateLex;
                 lex->reset();
+                lex->getNextToken();
                 eval(state);
 
                 lex = condLex;
                 lex->reset();
+                lex->getNextToken();
                 cond = eval(state);
             }
             if (state == BREAKING) {
@@ -284,64 +182,6 @@ void TinyJS::statement(STATE &state) {
         assert(0);
     }
 }
-
-
-
-
-
-
-
-//bool TinyJS::init() {
-//    char buffer[1024];
-//    string wholeText;
-//
-//    char endLineChar[2] = {'\n', '\0'};
-//    string endline(endLineChar);
-//
-//
-//    ifstream input(this->file, std::ios::in);
-//    ofstream output("./Test4JS/tokens.txt", std::ios::out);
-//
-//    while (input.getline(buffer, 1024)) {
-//        string line(buffer);
-//        wholeText += line + endline;
-//    }
-//
-//    Lex l(wholeText);
-//    for (int j = 0; j < l.tokens.size(); j++) {
-//        output << l.tokens[j].type;
-//        output << "  ";
-//    }
-//    lex = l;
-//
-//    return lex.tkgot;
-//}
-
-//Var *TinyJS::statement(Var *var, vector<Token *> &tokens, vector<Scope *> &currentAR) {
-//    cout << tokens[0]->type << endl;
-//    if (tokens.size() == 1) {
-//        const TOKEN_TYPES type = tokens[0]->type;
-//        if (type == TK_DEC_INT || type == TK_OCTAL_INT || type == TK_HEX_INT) {
-//            cout << "return " << tokens[0]->getIntData() << endl;
-//            return new Var(tokens[0]->getIntData());
-//        }
-//        if (type == TK_FLOAT) {
-//            return new Var(tokens[0]->getFloatData());
-//        }
-//    } else if (tokens[0]->type == TK_ASSIGN) {
-//        cout << "assign " << tokens.size() << endl;
-//        vector<Token *> tempTokens;
-//        for (int index = 1; index < tokens.size(); index++) tempTokens.push_back(tokens[index]);
-//        var->copy(statement(nullptr, tempTokens, currentAR));
-//    }
-//
-//    return nullptr;
-//}
-
-
-
-
-
 
 shared_ptr<VarLink> TinyJS::eval(STATE &state) {
     auto lhs = ternary(state);
@@ -392,6 +232,7 @@ shared_ptr<VarLink> TinyJS::logic(STATE &state) {
     auto lhs = compare(state);
     while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         bool getBool = false, shortCircuit = false;
 
@@ -425,6 +266,7 @@ shared_ptr<VarLink> TinyJS::compare(STATE &state) {
            lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
            lex->token.type == TK_LESS || lex->token.type == TK_L_EQUAL ||
            lex->token.type == TK_GREATER || lex->token.type == TK_G_EQUAL) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = shift(state);
@@ -438,6 +280,7 @@ shared_ptr<VarLink> TinyJS::compare(STATE &state) {
 shared_ptr<VarLink> TinyJS::shift(STATE &state) {
     auto ret = expression(state);
     if (lex->token.type == TK_L_SHIFT || lex->token.type == TK_R_SHIFT) {
+        ret = make_shared<VarLink>(ret->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto opNum = expression(state);
@@ -461,6 +304,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
     auto lhs = term(state);
     if (state == RUNNING && negative) {
         Var zero(0);
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         lhs->replaceWith(zero.mathOp(lhs->var, TK_MINUS));
     }
     while (lex->token.type == TK_PLUS || lex->token.type == TK_MINUS || lex->token.type == TK_PLUS_PLUS ||
@@ -468,6 +312,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
         auto op = lex->token.type;
         lex->match(lex->token.type);
         if (op == TK_PLUS || op == TK_MINUS) {
+            lhs = make_shared<VarLink>(lhs->var->copyThis());
             auto rhs = term(state);
             if (state == RUNNING) {
                 lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
@@ -485,6 +330,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
 shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
     auto lhs = unary(state);
     while (lex->token.type == TK_MULTIPLY || lex->token.type == TK_DIVIDE || lex->token.type == TK_MOD) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = unary(state);
@@ -498,7 +344,7 @@ shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
 shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
     if (lex->token.type == TK_NOT) {
         lex->match(TK_NOT);
-        auto ret = factor(state);
+        auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
         if (state == RUNNING) {
             ret->replaceWith(new Var(!(ret->var->getBool())));
         }
@@ -516,8 +362,14 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return ret;
     } else if (lex->token.type == TK_DEC_INT || lex->token.type == TK_HEX_INT || lex->token.type == TK_OCTAL_INT ||
                lex->token.type == TK_FLOAT) {
-        auto ret = make_shared<VarLink>(
-                new Var(lex->token.type == TK_FLOAT ? lex->token.getFloatData() : lex->token.getIntData()));
+        shared_ptr<VarLink> ret;
+        if (lex->token.type == TK_FLOAT) {
+            auto tmp = lex->token.getFloatData();
+            ret = make_shared<VarLink>(new Var(tmp));
+        } else {
+            auto tmp = lex->token.getIntData();
+            ret = make_shared<VarLink>(new Var(tmp));
+        }
         lex->match(lex->token.type);
         return ret;
     } else if (lex->token.type == TK_STRING) {
@@ -563,22 +415,49 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
             lex->match(TK_L_SQUARE_BRACKET);
             // TODO: array access
-//            auto idx = base(state);
+            auto idx = eval(state);
+            if (state == RUNNING) {
+                ret = ret->var->findChildOrCreate(idx->var->getString());
+            }
             lex->match(TK_R_SQUARE_BRACKET);
-//            if (state == RUNNING) {
-//                ret = ret->var->findChildOrCreate(idx->var->getString());
-//            }
         }
         return ret;
     } else if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array declaration
         // TODO: array declaration
-        return nullptr;
+        cout<<"array declaration"<<endl;
+        lex->match(TK_L_SQUARE_BRACKET);
+        auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
+        if (state == RUNNING && !ret) {
+            ret = make_shared<VarLink>(new Var(), lex->token.value);
+        }
+        Var* var=ret->var;
+
+        int index=0;
+        shared_ptr<VarLink> item;
+        while (true){
+            item=eval(state);
+
+            if(item== nullptr){
+                break;
+            }
+            stringstream ss;
+            ss << index;
+            var->addChild(ss.str(), item->var);
+            if(lex->token.type == TK_R_SQUARE_BRACKET){
+                break;
+            }
+
+            lex->match(TK_COMMA);
+            index++;
+        }
+
+        lex->match(TK_SEMICOLON);
+        return ret;
     } else if (lex->token.type == TK_FUNCTION) { // function declaration
         // TODO: function parse
-//        auto func = parseFuncDefinition();
+        auto func = parseFuncDefinition();
 //        assert(func->name == ANONYMOUS);
-//        return func;
-        return nullptr;
+        return func;
     } else if (lex->token.type == TK_NEW) { // new an object
         // TODO: new an object
         return nullptr;
@@ -586,6 +465,18 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     return nullptr;
 }
 
+shared_ptr<VarLink> TinyJS:: parseFuncDefinition(){
+    auto func = make_shared<VarLink>(new Var() ,lex->token.value);
+
+    lex->match(TK_IDENTIFIER);
+    lex->match(TK_L_BRACKET);
+
+    while(true){
+
+    }
+
+    return func;
+}
 
 void TinyJS::block(STATE &state) {
     lex->match(TK_L_LARGE_BRACKET);
@@ -606,37 +497,6 @@ void TinyJS::block(STATE &state) {
         }
     }
 }
-
-//VarLink* TinyJS::statement(Var *var, vector<Token *> &tokens, vector<Scope *> &currentAR) {
-//
-//
-//}
-
-
-
-
-
-//Var *TinyJS::findVar(const string &name, vector<Scope *> &currentAR) {
-//    int index = (int) currentAR.size() - 1;
-//    while (index >= 0) {
-//        Scope *scope = currentAR[index];
-//        auto findVar = scope->vars.find(name);
-//        if (findVar != scope->vars.end()) {
-//            cout << "var found." << endl;
-//            return findVar->second->var;
-//        }
-////        int scopeIndex = (int) scope->vars.size() - 1;
-////        while (scopeIndex >= 0) {
-////            if (scope->vars[scopeIndex]->name == name) {
-////                return scope->vars[scopeIndex]->var;
-////            }
-////            scopeIndex--;
-////        }
-//        index--;
-//    }
-//
-//    return nullptr;
-//}
 
 shared_ptr<VarLink> TinyJS::findVar(const string &varName) {
     for (int i = (int) scopes.size() - 1; i >= 0; i--) {

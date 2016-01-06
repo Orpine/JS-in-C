@@ -18,6 +18,10 @@ class Var;
 class VarLink;
 typedef void (*Callback)(Var *var, void *data);
 #define JS_RETURN_VAR "__builtin__return"
+#define JS_FUNCBODY_VAR "__builtin__body"
+#define JS_PARAMETER_VAR "__builtin__param"
+#define JS_ARGS_VAR "__buitin__args"
+
 enum VAR_TYPES {
     VAR_UNDEFINED,
     VAR_NULL,
@@ -54,9 +58,9 @@ public:
 
     Var();//create undefined
     Var(const std::string &varData, int varType=VAR_STRING);
-    Var(double varData);
-    Var(int varData);
     Var(bool varData);
+    Var(int varData);
+    Var(double varData);
     ~Var();
 
     bool isInt(){return(type==VAR_INTEGER);}
@@ -134,19 +138,5 @@ public:
     void setIntNmae(int idx);
 };
 
-
-class Scope{
-    /*
-     * @name:the symbol of the scope
-     * @vars:the list of the variabes of the scope
-     * */
-public:
-    std::string name;
-    map<std::string, std::shared_ptr<VarLink> > vars;
-//    vector<VarLink*> vars;
-    Scope(string name){
-        this->name=name;
-    }
-};
 
 #endif 
