@@ -1,15 +1,23 @@
 //
 // Created by user on 2015/12/30.
 //
+#ifndef _var_h_
+#define _var_h_
 
-#ifndef TINYJS_VAR_H
-#define TINYJS_VAR_H
 
 #include <unordered_map>
+#include <memory>
+#include <string>
+#include <stdlib.h>
+#include <assert.h>
+#include <sstream>
+
+#include <iostream>
+#include "Lex.h"
 class Var;
 class VarLink;
 typedef void (*Callback)(Var *var, void *data);
-#define JS_IN_C_RETURN_VAR "return"
+#define JS_RETURN_VAR "__builtin__return"
 enum VAR_TYPES {
     VAR_UNDEFINED,
     VAR_NULL,
@@ -38,10 +46,10 @@ protected:
 
 public:
     int type;
-    VarLink *firstChild;
-    VarLink *lastChild;
-    vector<Token*> valueTokens;
-    vector<VarLink*> args;
+    std::shared_ptr<VarLink> firstChild;
+    std::shared_ptr<VarLink> lastChild;
+//    vector<Token*> valueTokens;
+//    vector<VarLink*> args;
     int len;
 
     Var();//create undefined
@@ -62,7 +70,7 @@ public:
     bool isNative(){return(native);}
     bool isUndefined(){return(type==VAR_UNDEFINED);}
     bool isNull(){return(type==VAR_NULL);}
-    bool isBasic(){return(firstChild==0);}
+    bool isBasic(){return(firstChild==nullptr);}
 
     int getInt();
     bool getBool();
@@ -77,18 +85,20 @@ public:
     void setArray();
     bool equals(Var *var);
 
-    Var *mathOp(Var *b, int op);
+    Var *mathOp(Var *b, TOKEN_TYPES op);
     void copyValueFrom(Var *var);
     Var *copyThis();
     void copy(Var* var);
 
-    VarLink* findChild(const std::string& childName);
-    VarLink* findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
-    VarLink* findChildByPath(const std::string& path);
-    VarLink* addChild(const std::string& childName,Var* child=NULL);
-    VarLink* addUniqueChild(const std::string& childName,Var* child=NULL);
+    std::shared_ptr<VarLink> findChild(const std::string& childName);
+    std::shared_ptr<VarLink> findChildOrCreate(const std::string& childName,int childType=VAR_UNDEFINED);
+    std::shared_ptr<VarLink> findChildByPath(const std::string& path);
+    std::shared_ptr<VarLink> addChild(const std::string& childName,Var* child=NULL);
+    std::shared_ptr<VarLink> addUniqueChild(const std::string& childName,Var* child=NULL);
+    bool checkChild(const std::string& childName){return (bool)findChild(childName);};
     void removeChild(Var* child);
-    void removeLink(VarLink* link);
+    void addChilds(Var* parent);
+    void removeLink(std::shared_ptr<VarLink> link);
     void removeAllChildren();
     Var *getAtIndex(int idx); //
     void setAtIndex(int idx, Var *var); //
@@ -104,20 +114,22 @@ public:
     int getRefNum(){return refNum;}
 };
 
+const std::string ANONYMOUS_VAR = "";
+const std::string VAR_BLANK = "";
 
 class VarLink{
 public:
     std::string name;
-    VarLink *prevSibling;
-    VarLink *nextSibling;
+    std::shared_ptr<VarLink> prevSibling;
+    std::shared_ptr<VarLink> nextSibling;
     Var *var;
     bool owned;
 
-    VarLink(Var *var,const std::string &name);
+    VarLink(Var *var,const std::string &name = ANONYMOUS_VAR);
     VarLink(const VarLink& link);//copy constructor
     ~VarLink();
     void replaceWith(Var* var);
-    void replaceWith(VarLink* varLink);
+    void replaceWith(shared_ptr<VarLink> varLink);
     int getIntName();
     void setIntNmae(int idx);
 };
@@ -130,11 +142,11 @@ class Scope{
      * */
 public:
     std::string name;
-    map<std::string, shared_ptr<VarLink> > vars;
+    map<std::string, std::shared_ptr<VarLink> > vars;
 //    vector<VarLink*> vars;
     Scope(string name){
         this->name=name;
     }
 };
 
-#endif //TINYJS_VAR_H
+#endif 

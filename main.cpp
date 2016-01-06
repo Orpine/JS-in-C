@@ -10,10 +10,10 @@
 #include <fstream>
 #include "Lex.h"
 
-int main(int argc, const char * argv[]) {
+#include "TinyJS.h"
 
-    string path = "/Users/laoreja/Downloads/tiny-js-master/tests/test003";
-    string filePath=path+".js";
+using namespace std;
+
 
     char buffer[1024];
     string wholeText;
@@ -23,31 +23,31 @@ int main(int argc, const char * argv[]) {
 
 
 
-    for (int i = 1; i < 2; ++i) {
-        wholeText = "";
-//        if (i < 10) {
-//            filePath = path + "0" + to_string(i) + ".js";
-//        }else{
-//            filePath = path + "" + string(i) + ".js";
-//        }
+//     for (int i = 1; i < 2; ++i) {
+//         wholeText = "";
+// //        if (i < 10) {
+// //            filePath = path + "0" + to_string(i) + ".js";
+// //        }else{
+// //            filePath = path + "" + string(i) + ".js";
+// //        }
 
-        cout << endl << i << endl;
-        ifstream input(filePath, std::ios::in);
-        ofstream output(path+"res.txt", std::ios::out);
+//         cout << endl << i << endl;
+//         ifstream input(filePath, std::ios::in);
+//         ofstream output(path+"res.txt", std::ios::out);
 
-        while (input.getline(buffer, 1024)) {
-            string line(buffer);
-            wholeText += line + endline;
-        }
+//         while (input.getline(buffer, 1024)) {
+//             string line(buffer);
+//             wholeText += line + endline;
+//         }
 
-//        cout<<wholeText<<endl;
-//        
-        Lex l(wholeText);
+// //        cout<<wholeText<<endl;
+// //        
+//         Lex l(wholeText);
         
-        while (l.token.type!=TK_EOF) {
-            l.getNextToken();
-            cout << l.getTokenStr(l.token.type) << " " << l.token.value << endl;
-        }
+//         while (l.token.type!=TK_EOF) {
+//             l.getNextToken();
+//             cout << l.getTokenStr(l.token.type) << " " << l.token.value << endl;
+//         }
 //        l.getNextToken();
 //        l.getNextToken();
 //        l.match(TK_ASSIGN);
@@ -126,18 +126,13 @@ int main(int argc, const char * argv[]) {
 //            output << l.tokens[j].type;
 //            output << "  ";
 //        }
-    }
+    // }
+
+int main() {
+    string file="./Test4JS/test1.js";
+    TinyJS tinyJS(file);
+//    tinyJS.root->addChild("result", new Var(0));
+    tinyJS.execute();
+    cout << tinyJS.root->findChild("result")->var->getInt() << endl;
     return 0;
 }
-
-//#include "TinyJS.h"
-//
-//using namespace std;
-//
-//int main() {
-//    string file="./Test4JS/test1.js";
-//    TinyJS tinyJS(file);
-//    tinyJS.run();
-//
-//    return 0;
-//}

@@ -5,11 +5,13 @@
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Lex.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Lex.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/lex_test.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/main.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TinyJS.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/TinyJS.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/var.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/var.h" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/var_test.cpp" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

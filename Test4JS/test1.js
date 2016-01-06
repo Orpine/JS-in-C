@@ -1,1 +1,3 @@
-var a=1;
+// comparison
+var a = 42;
+result = a==42;
