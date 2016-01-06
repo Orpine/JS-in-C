@@ -40,42 +40,87 @@ int main(int argc, const char * argv[]) {
             wholeText += line + endline;
         }
 
-        cout<<wholeText<<endl;
-        
+//        cout<<wholeText<<endl;
+//        
         Lex l(wholeText);
-        l.getNextToken();
-        l.getNextToken();
-        l.match(TK_ASSIGN);
-        l.match(TK_DEC_INT);
-        l.match(TK_SEMICOLON);
-        l.match(TK_VAR);
-        l.match(TK_IDENTIFIER);
-        l.getNextToken();
-        l.match(TK_FOR);
-        l.getNextToken();
-        l.match(TK_IDENTIFIER);
-        l.getNextToken();
-        l.match(TK_DEC_INT);
-        l.getNextToken();
-        l.match(TK_IDENTIFIER);
-        l.match(TK_L_EQUAL);
-        l.match(TK_DEC_INT);
-        l.getNextToken();
-        l.match(TK_IDENTIFIER);
-        l.match(TK_PLUS_PLUS);
-        l.getNextToken();
-        int lastPosition = l.posNow + 1;
         
-        l.match(TK_IDENTIFIER);
-        l.getNextToken();
-        l.getNextToken();
-        l.match(TK_PLUS);
-        l.match(TK_IDENTIFIER);
-        l.getNextToken();
-        Lex* subLex;
-        subLex = l.getSubLex(lastPosition);
-        subLex -> getNextToken();
-        cout << subLex->token.value;
+        while (l.token.type!=TK_EOF) {
+            l.getNextToken();
+            cout << l.getTokenStr(l.token.type) << " " << l.token.value << endl;
+        }
+//        l.getNextToken();
+//        l.getNextToken();
+//        l.match(TK_ASSIGN);
+//        l.match(TK_DEC_INT);
+//        l.match(TK_SEMICOLON);
+//        l.match(TK_VAR);
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.match(TK_FOR);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.match(TK_DEC_INT);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.match(TK_L_EQUAL);
+//        l.match(TK_DEC_INT);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.match(TK_PLUS_PLUS);
+//        l.getNextToken();
+//        int lastPosition = l.posNow + 1;
+//        
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.getNextToken();
+//        l.match(TK_PLUS);
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        Lex* subLex;
+//        subLex = l.getSubLex(lastPosition);
+//        subLex -> getNextToken();
+//        cout << subLex->token.value;
+//        while (l.token.type != TK_EOF) {
+//            l.getNextToken();
+//            cout << l.token.value << " ";
+//        }
+//        
+//        l.reset();
+//        l.getNextToken();
+//        l.getNextToken();
+//        l.match(TK_ASSIGN);
+//        l.match(TK_DEC_INT);
+//        l.match(TK_SEMICOLON);
+//        l.match(TK_VAR);
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.match(TK_FOR);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.match(TK_DEC_INT);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.match(TK_L_EQUAL);
+//        l.match(TK_DEC_INT);
+//        l.getNextToken();
+//        l.match(TK_IDENTIFIER);
+//        l.match(TK_PLUS_PLUS);
+//        l.getNextToken();
+//        lastPosition = l.posNow + 1;
+//        
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        l.getNextToken();
+//        l.match(TK_PLUS);
+//        l.match(TK_IDENTIFIER);
+//        l.getNextToken();
+//        Lex* subLex2;
+//        subLex2 = l.getSubLex(lastPosition);
+//        subLex2 -> getNextToken();
+//        cout << subLex2->token.value;
+
         
 //        for (int j = 0; j < l.tokens.size(); j++) {
 //            output << l.tokens[j].type;

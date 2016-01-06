@@ -386,6 +386,16 @@ void Lex::initialTokenMap() {
     tokenMap["?"] = TK_QUESTION_MARK;
     
     // value properties
+    invTokenMap[TK_EOF] = "eof";
+    invTokenMap[TK_IDENTIFIER] = "ID";
+    invTokenMap[TK_NOT_VALID] = "TK_NOT_VALID";
+    invTokenMap[TK_DEC_INT] = "dec int";
+    invTokenMap[TK_OCTAL_INT] = "oct int";
+    invTokenMap[TK_HEX_INT] = "hex int";
+    invTokenMap[TK_FLOAT] = "float";
+    invTokenMap[TK_STRING] = "string";
+    
+    
     invTokenMap[TK_INFINITY] = "Infinity";
     invTokenMap[TK_NAN] = "NaN";
     invTokenMap[TK_UNDEIFNED] = "undefined";
@@ -463,10 +473,10 @@ void Lex::initialTokenMap() {
     //done
     invTokenMap[TK_L_SQUARE_BRACKET] = "[";
     invTokenMap[TK_R_SQUARE_BRACKET] = "]";
-    invTokenMap[TK_R_BRACKET] = "(";
+    invTokenMap[TK_L_BRACKET] = "(";
     invTokenMap[TK_R_BRACKET] = ")";
     invTokenMap[TK_L_LARGE_BRACKET] = "{";
-    invTokenMap[TK_R_BRACKET] = "}";
+    invTokenMap[TK_R_LARGE_BRACKET] = "}";
     invTokenMap[TK_DOT] = ".";
     invTokenMap[TK_SEMICOLON] = ";";
     invTokenMap[TK_COLON] = ":";
