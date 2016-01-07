@@ -8,7 +8,6 @@
 
 #include "Lex.h"
 #include <regex>
-#include <sstream>
 
 //the tokens that can appear before numbers with '+/-' prefix
 set<TOKEN_TYPES> tokenBeforePrefix{
@@ -300,11 +299,11 @@ string Lex::getSubString() {
 }
 
 Lex *Lex::getSubLex(int lastPosition) {
-    if (lastPosition >= tokenLastEnd) {
-        cout << "getSubLex error: lastPositin >= tokenLastEnd" << endl;
+    if (lastPosition > tokenLastEnd) {
+        cout << "getSubLex error: lastPositin > tokenLastEnd" << endl;
         return nullptr;
     }
-    return new Lex(originalStr.substr(lastPosition - 1, tokenLastEnd - lastPosition + 2));
+    return new Lex(originalStr.substr(lastPosition, tokenLastEnd - lastPosition+1));
     
 }
 
@@ -394,7 +393,7 @@ void Lex::initialTokenMap() {
     tokenMap["("] = TK_L_BRACKET;
     tokenMap[")"] = TK_R_BRACKET;
     tokenMap["{"] = TK_L_LARGE_BRACKET;
-    tokenMap["}"] = TK_R_LARGE_BRACKET;
+    tokenMap["}"] = TK_R_BRACKET;
     tokenMap["."] = TK_DOT;
     tokenMap[";"] = TK_SEMICOLON;
     tokenMap[":"] = TK_COLON;
