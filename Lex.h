@@ -159,9 +159,7 @@ public:
 
     string getSubString();
     Lex* getSubLex(int lastPosition);
-    //return [lastPosition, tokenLastEnd]
-    
-//    string getPosition(int pos = -1);
+
 
     void getNextToken() {
         

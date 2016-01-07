@@ -51,7 +51,10 @@ public:
     Var *root;
 
     void execute();
-    shared_ptr<VarLink> parseFuncDefinition();
+    Var* parseFuncDefinition(bool assign);
+    Var* parseArguments();
+    Var* callFunction(STATE& , shared_ptr<VarLink> func, Var* args, vector<Var*> parent);
+
 };
 
 

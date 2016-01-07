@@ -284,18 +284,25 @@ string Lex::getTokenStr(TOKEN_TYPES tkType) {
 
 string Lex::getSubString() {
     int count=1;
-    int index=posNow;
+    int prePos=posNow;
+    int start=posNow-1;
+    int len=1;
+
+
     while(count>0){
-        if(originalStr[index]=='{'){
+        this->getNextToken();
+        if(token.value == "{"){
             count++;
         }
-        if(originalStr[index]=='}'){
+        if(token.value == "}"){
             count--;
         }
-        index++;
-    }
-    string result = originalStr.substr(posNow, index);
-    posNow=index;
+    };
+
+    len=posNow-prePos;
+    string result = originalStr.substr(start, len+1);
+    this->match(TK_R_LARGE_BRACKET);
+
     return result;
 }
 

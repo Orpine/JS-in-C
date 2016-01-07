@@ -171,6 +171,10 @@ void TinyJS::statement(STATE &state) {
         }
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_FUNCTION) {
+        lex->match(TK_FUNCTION);
+
+        auto func = parseFuncDefinition(false);
+        scopes.back()->addUniqueChild(lex->token.value, func);
 
     } else if (lex->token.type == TK_EOF) {
 
@@ -396,25 +400,40 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         if (state == RUNNING && !ret) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
         }
-        auto parent = nullptr;
+
+        vector<Var* > parent;
+        parent.push_back(root);
+
         lex->match(TK_IDENTIFIER);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
                 // TODO: function call
-//                ret = callFunction(state, ret, parent);
+                string funcName = lex->lastTk.value;
+                auto func = findVar(funcName);
+                lex->match(TK_L_BRACKET);
+                Var* args = parseArguments();
+
+                auto origiLex = lex;
+                auto origiScopes = scopes;
+
+                ret = make_shared<VarLink>(callFunction(state, func, args, parent));
+
+                lex=origiLex;
+                scopes=origiScopes;
+
+                return ret;
             } else if (lex->token.type == TK_DOT) { // . means record access
-                // TODO: record access
-//                lex->match(TK_DOT);
-//                if (state == RUNNING) {
-//                    auto varName = lex->token.value;
-//                    auto child = ret->var->findChild(varName);
-//
-//                }
+                lex->match(TK_DOT);
+                if (state == RUNNING) {
+                    auto varName = lex->token.value;
+                    auto child = ret->var->findChild(varName);
+
+                }
             }
         }
         if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
             lex->match(TK_L_SQUARE_BRACKET);
-            // TODO: array access
+
             auto idx = eval(state);
             if (state == RUNNING) {
                 ret = ret->var->findChildOrCreate(idx->var->getString());
@@ -423,9 +442,8 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         }
         return ret;
     } else if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array declaration
-        // TODO: array declaration
-        cout<<"array declaration"<<endl;
         lex->match(TK_L_SQUARE_BRACKET);
+
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
         if (state == RUNNING && !ret) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
@@ -455,9 +473,11 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return ret;
     } else if (lex->token.type == TK_FUNCTION) { // function declaration
         // TODO: function parse
-        auto func = parseFuncDefinition();
-//        assert(func->name == ANONYMOUS);
-        return func;
+        lex->match(TK_FUNCTION);
+
+        Var* func = parseFuncDefinition(true);
+
+        return make_shared<VarLink>(func);
     } else if (lex->token.type == TK_NEW) { // new an object
         // TODO: new an object
         return nullptr;
@@ -465,17 +485,92 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     return nullptr;
 }
 
-shared_ptr<VarLink> TinyJS:: parseFuncDefinition(){
-    auto func = make_shared<VarLink>(new Var() ,lex->token.value);
+Var* TinyJS:: parseArguments(){
+    Var* args = new Var();
 
-    lex->match(TK_IDENTIFIER);
-    lex->match(TK_L_BRACKET);
-
+    int index=0;
     while(true){
+        if(lex->token.type == TK_R_BRACKET){
+            lex->match(TK_R_BRACKET);
+            break;
+        }
+        if(lex->token.type == TK_COMMA){
+            lex->match(TK_COMMA);
+        }
 
+        auto arg = findVar(lex->token.value);
+        stringstream ss;
+        ss << index;
+        args->addChild(ss.str(), arg->var);
+        index++;
     }
 
+    args->addChild(JS_PARAMETER_VAR, new Var(index));
+    return args;
+}
+
+Var* TinyJS:: parseFuncDefinition(bool assign){
+    auto func = new Var();
+
+    if(!assign)
+        lex->match(TK_IDENTIFIER);
+    lex->match(TK_L_BRACKET);
+
+    auto args = new Var();
+    int count=0;
+    while(true){
+        if(lex->token.type == TK_R_BRACKET){
+            lex->match(TK_R_BRACKET);
+            break;
+        }
+        if(lex->token.type == TK_COMMA){
+            lex->match(TK_COMMA);
+        }
+
+        stringstream ss;
+        ss << count;
+        args->addChild(ss.str(), new Var());
+        count++;
+        lex->match(TK_IDENTIFIER);
+    }
+
+    func->addChild(JS_PARAMETER_VAR, new Var(count));
+    func->addChild(JS_ARGS_VAR, args);
+    func->addChild(JS_FUNCBODY_VAR, new Var(lex->getSubString()));
     return func;
+}
+
+Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vector<Var*> parent){
+    auto num = args->findChild(JS_PARAMETER_VAR);
+    auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
+    if(num->var->getInt() != funcNum->var->getInt()){
+        cout<<"error: expected number of arguments is "<<funcNum->var->getInt()<<".But it's "<<num->var->getInt()<<" now."<<endl;
+        return nullptr;
+    }
+
+    Var* scope=new Var();
+    parent.push_back(scope);
+
+    int n = num->var->getInt();
+    auto inArgus = args->findChild(JS_ARGS_VAR);
+    auto outArgus = func->var->findChild(JS_ARGS_VAR);
+    for(int i=0;i<n;i++){
+        stringstream ss;
+        ss << i;
+
+        scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), inArgus->var->copyThis());
+    }
+
+    string code = func->var->findChild(JS_FUNCBODY_VAR)->var->getString();
+    lex = new Lex(code);
+    lex->getNextToken();
+    scopes=parent;
+    while (lex->token.type != TK_EOF) {
+        statement(state);
+    }
+
+    return scopes.back()->findChild(JS_RETURN_VAR)->var;
+
 }
 
 void TinyJS::block(STATE &state) {
