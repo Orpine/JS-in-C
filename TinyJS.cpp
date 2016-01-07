@@ -492,7 +492,7 @@ shared_ptr<VarLink> TinyJS:: parseJSON(){
     lex->match(TK_R_LARGE_BRACKET);
 }
 
-Var* TinyJS:: parseArguments(STATE& state){
+Var* TinyJS:: parseArguments(STATE &state){
     Var* args = new Var();
     args->addChild(JS_ARGS_VAR,new Var());
     auto params = args->findChild(JS_ARGS_VAR);
@@ -520,6 +520,7 @@ Var* TinyJS:: parseArguments(STATE& state){
 
 Var* TinyJS:: parseFuncDefinition(bool assign){
     auto func = new Var();
+
 
     if(!assign)
         lex->match(TK_IDENTIFIER);
