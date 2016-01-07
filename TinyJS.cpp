@@ -566,10 +566,11 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     lex = new Lex(code);
     lex->getNextToken();
     scopes=parent;
+    auto oriState = state;
     while (lex->token.type != TK_EOF) {
         statement(state);
     }
-
+    state = oriState;
     return scopes.back()->findChild(JS_RETURN_VAR)->var;
 
 }
