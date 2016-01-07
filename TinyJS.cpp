@@ -173,8 +173,9 @@ void TinyJS::statement(STATE &state) {
     } else if (lex->token.type == TK_FUNCTION) {
         lex->match(TK_FUNCTION);
 
+        string name = lex->token.value;
         auto func = parseFuncDefinition(false);
-        scopes.back()->addUniqueChild(lex->token.value, func);
+        scopes.back()->addUniqueChild(name, func);
 
     } else if (lex->token.type == TK_EOF) {
 
@@ -413,7 +414,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 string funcName = lex->lastTk.value;
                 auto func = findVar(funcName);
                 lex->match(TK_L_BRACKET);
-                Var* args = parseArguments();
+                Var* args = parseArguments(state);
 
                 auto originLex = lex;
                 auto originScopes = scopes;
@@ -491,8 +492,10 @@ shared_ptr<VarLink> TinyJS:: parseJSON(){
     lex->match(TK_R_LARGE_BRACKET);
 }
 
-Var* TinyJS:: parseArguments(){
+Var* TinyJS:: parseArguments(STATE& state){
     Var* args = new Var();
+    args->addChild(JS_ARGS_VAR,new Var());
+    auto params = args->findChild(JS_ARGS_VAR);
 
     int index=0;
     while(true){
@@ -504,10 +507,10 @@ Var* TinyJS:: parseArguments(){
             lex->match(TK_COMMA);
         }
 
-        auto arg = findVar(lex->token.value);
+        auto arg = eval(state);
         stringstream ss;
         ss << index;
-        args->addChild(ss.str(), arg->var);
+        params->var->addChild(ss.str(), arg->var);
         index++;
     }
 
@@ -535,7 +538,7 @@ Var* TinyJS:: parseFuncDefinition(bool assign){
 
         stringstream ss;
         ss << count;
-        args->addChild(ss.str(), new Var());
+        args->addChild(ss.str(), new Var(lex->token.value));
         count++;
         lex->match(TK_IDENTIFIER);
     }
@@ -561,11 +564,13 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     int n = num->var->getInt();
     auto inArgus = args->findChild(JS_ARGS_VAR);
     auto outArgus = func->var->findChild(JS_ARGS_VAR);
+
     for(int i=0;i<n;i++){
         stringstream ss;
         ss << i;
 
-        scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), inArgus->var->copyThis());
+        auto tmp = inArgus->var->findChild(ss.str())->var->copyThis();
+        scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
     }
 
     string code = func->var->findChild(JS_FUNCBODY_VAR)->var->getString();

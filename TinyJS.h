@@ -53,7 +53,7 @@ public:
 
     void execute();
     Var* parseFuncDefinition(bool assign);
-    Var* parseArguments();
+    Var* parseArguments(STATE& state);
     Var* callFunction(STATE& , shared_ptr<VarLink> func, Var* args, vector<Var*> parent);
 
 };
