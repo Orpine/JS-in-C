@@ -382,7 +382,9 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return ret;
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
         //  TODO: json data
-        return nullptr;
+        lex->match(TK_L_LARGE_BRACKET);
+        auto ret=parseJSON();
+        return ret;
     } else if (lex->token.type == TK_TRUE) {
         lex->match(TK_TRUE);
         return make_shared<VarLink>(new Var(true));
@@ -483,6 +485,10 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return nullptr;
     }
     return nullptr;
+}
+shared_ptr<VarLink> TinyJS:: parseJSON(){
+
+    lex->match(TK_R_LARGE_BRACKET);
 }
 
 Var* TinyJS:: parseArguments(){

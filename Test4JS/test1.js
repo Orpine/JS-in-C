@@ -1,9 +1,5 @@
-a = function(){
-	var i;
-	var result=0;
-	for(i=0;i<10;i++){
-		result+=i;
-	}
-	return result + 2;
+function a(i){
+    if (i == 0) {return 1;}
+    return i * a(i - 1);
 };
-result = a();
+result = a(0);
