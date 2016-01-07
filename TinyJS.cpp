@@ -80,12 +80,14 @@ void TinyJS::statement(STATE &state) {
             while (state == RUNNING && cond->var->getBool()) {
                 lex = bodyLex;
                 lex->reset();
+                lex->getNextToken();
                 statement(state);
                 if (state == CONTINUE) {
                     state = RUNNING;
                 }
                 lex = condLex;
                 lex->reset();
+                lex->getNextToken();
                 cond = eval(state);
             }
             if (state == BREAKING) {
@@ -126,6 +128,7 @@ void TinyJS::statement(STATE &state) {
             while (state == RUNNING && cond->var->getBool()) {
                 lex = bodyLex;
                 lex->reset();
+                lex->getNextToken();
                 statement(state);
                 if (state == CONTINUE) {
                     state = RUNNING;
@@ -133,10 +136,12 @@ void TinyJS::statement(STATE &state) {
 
                 lex = updateLex;
                 lex->reset();
+                lex->getNextToken();
                 eval(state);
 
                 lex = condLex;
                 lex->reset();
+                lex->getNextToken();
                 cond = eval(state);
             }
             if (state == BREAKING) {
@@ -227,6 +232,7 @@ shared_ptr<VarLink> TinyJS::logic(STATE &state) {
     auto lhs = compare(state);
     while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         bool getBool = false, shortCircuit = false;
 
@@ -260,6 +266,7 @@ shared_ptr<VarLink> TinyJS::compare(STATE &state) {
            lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
            lex->token.type == TK_LESS || lex->token.type == TK_L_EQUAL ||
            lex->token.type == TK_GREATER || lex->token.type == TK_G_EQUAL) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = shift(state);
@@ -273,6 +280,7 @@ shared_ptr<VarLink> TinyJS::compare(STATE &state) {
 shared_ptr<VarLink> TinyJS::shift(STATE &state) {
     auto ret = expression(state);
     if (lex->token.type == TK_L_SHIFT || lex->token.type == TK_R_SHIFT) {
+        ret = make_shared<VarLink>(ret->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto opNum = expression(state);
@@ -296,6 +304,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
     auto lhs = term(state);
     if (state == RUNNING && negative) {
         Var zero(0);
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         lhs->replaceWith(zero.mathOp(lhs->var, TK_MINUS));
     }
     while (lex->token.type == TK_PLUS || lex->token.type == TK_MINUS || lex->token.type == TK_PLUS_PLUS ||
@@ -303,6 +312,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
         auto op = lex->token.type;
         lex->match(lex->token.type);
         if (op == TK_PLUS || op == TK_MINUS) {
+            lhs = make_shared<VarLink>(lhs->var->copyThis());
             auto rhs = term(state);
             if (state == RUNNING) {
                 lhs->replaceWith(lhs->var->mathOp(rhs->var, op));
@@ -320,6 +330,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
 shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
     auto lhs = unary(state);
     while (lex->token.type == TK_MULTIPLY || lex->token.type == TK_DIVIDE || lex->token.type == TK_MOD) {
+        lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = unary(state);
@@ -333,7 +344,7 @@ shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
 shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
     if (lex->token.type == TK_NOT) {
         lex->match(TK_NOT);
-        auto ret = factor(state);
+        auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
         if (state == RUNNING) {
             ret->replaceWith(new Var(!(ret->var->getBool())));
         }

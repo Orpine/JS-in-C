@@ -3,7 +3,8 @@
 //result=1;
 //var result=002;
 
-//var i;
+var i;
+result = 0;
 for(i=0; i<10 ; i++){
-    result = 10;
+    result += i;
 }
