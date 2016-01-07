@@ -413,7 +413,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 string funcName = lex->lastTk.value;
                 auto func = findVar(funcName);
                 lex->match(TK_L_BRACKET);
-                Var* args = parseArguments();
+                Var* args = parseArguments(state);
 
                 auto originLex = lex;
                 auto originScopes = scopes;
@@ -491,7 +491,7 @@ shared_ptr<VarLink> TinyJS:: parseJSON(){
     lex->match(TK_R_LARGE_BRACKET);
 }
 
-Var* TinyJS:: parseArguments(){
+Var* TinyJS:: parseArguments(STATE &state){
     Var* args = new Var();
 
     int index=0;
@@ -504,7 +504,7 @@ Var* TinyJS:: parseArguments(){
             lex->match(TK_COMMA);
         }
 
-        auto arg = findVar(lex->token.value);
+        auto arg = eval(state);
         stringstream ss;
         ss << index;
         args->addChild(ss.str(), arg->var);
@@ -517,6 +517,7 @@ Var* TinyJS:: parseArguments(){
 
 Var* TinyJS:: parseFuncDefinition(bool assign){
     auto func = new Var();
+
 
     if(!assign)
         lex->match(TK_IDENTIFIER);
