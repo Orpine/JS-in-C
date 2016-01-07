@@ -134,8 +134,7 @@ int main() {
     TinyJS tinyJS(file);
 //    tinyJS.root->addChild("result", new Var(0));
     tinyJS.execute();
-//    cout << tinyJS.root->findChild("a")->var->getInt()<< endl;
-    cout<<tinyJS.root->findChild("a")->var->getInt()<<endl;
-    cout << tinyJS.root->findChild("result")->var->findChild(JS_FUNCBODY_VAR)->var->getString() << endl;
+
+    cout << tinyJS.root->findChild("result")->var->getInt() << endl;
     return 0;
 }

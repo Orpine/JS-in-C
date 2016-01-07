@@ -413,13 +413,13 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_L_BRACKET);
                 Var* args = parseArguments();
 
-                auto origiLex = lex;
-                auto origiScopes = scopes;
+                auto originLex = lex;
+                auto originScopes = scopes;
 
                 ret = make_shared<VarLink>(callFunction(state, func, args, parent));
 
-                lex=origiLex;
-                scopes=origiScopes;
+                lex=originLex;
+                scopes = originScopes;
 
                 return ret;
             } else if (lex->token.type == TK_DOT) { // . means record access
@@ -549,6 +549,7 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     }
 
     Var* scope=new Var();
+    scope->addChild(JS_RETURN_VAR, new Var());
     parent.push_back(scope);
 
     int n = num->var->getInt();
