@@ -402,12 +402,18 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
         }
 
-
+        bool child=false;
         lex->match(TK_IDENTIFIER);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
-                string funcName = lex->lastTk.value;
-                auto func = findVar(funcName);
+                shared_ptr<VarLink> func;
+                if(child){
+                    func=ret;
+                }
+                else {
+                    func = findVar(lex->lastTk.value);
+                }
+
                 lex->match(TK_L_BRACKET);
                 Var* args = parseArguments(state);
 
@@ -421,13 +427,13 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
                 return ret;
             } else if (lex->token.type == TK_DOT) { // . means record access
+                child=true;
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
                     ret = ret->var->findChild(varName);
                     lex->match(TK_IDENTIFIER);
                 }
-                return ret;
             }
         }
         if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
@@ -461,6 +467,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             ss << index;
             var->addChild(ss.str(), item->var);
             if(lex->token.type == TK_R_SQUARE_BRACKET){
+                lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
 
@@ -468,7 +475,6 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             index++;
         }
 
-        lex->match(TK_SEMICOLON);
         return ret;
     } else if (lex->token.type == TK_FUNCTION) { // function declaration
         // TODO: function parse
