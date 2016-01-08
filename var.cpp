@@ -537,7 +537,7 @@ void Var::addChilds(Var *parent) {
 
         while (link) {
             if (link->var != this) {
-                addChild(link->name, link->var->ref());
+                addUniqueChild(link->name, link->var->ref());
 
             }
             link = link->nextSibling;

@@ -1,13 +1,11 @@
-a={
-  d:5,
-  e:function(i){
-      if(i==0) {
-          return 1;
-      }
-      else {
-          return i * a.e(i - 1);
-      }
-  }
-};
-result1 = a.d;
-result= a.e(5);
+
+function f1(){
+    var n=999;
+    nAdd=function(){n+=1;};
+    function f2() {
+        return n;
+    }
+    return f2;
+}
+var res=f1();
+result = f2();// == 1000;
