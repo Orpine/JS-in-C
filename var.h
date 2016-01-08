@@ -20,10 +20,9 @@ typedef void (*Callback)(Var *var, void *data);
 #define JS_RETURN_VAR "__builtin__return"
 #define JS_FUNCBODY_VAR "__builtin__body"
 #define JS_PARAMETER_VAR "__builtin__param"
-#define JS_ARGS_VAR "__buitin__args"
-
-#define JS_FUNC_SCOPE_VAR_NUM  "__builtin__func__scope__num"
-#define JS_FUNC_SCOPE      "__builtin__func__index"
+#define JS_ARGS_VAR "__builtin__args"
+#define JS_SCOPE    "__builtin__scope"
+#define JS_SCOPE_NUM "__builtin__scope__num"
 
 enum VAR_TYPES {
     VAR_UNDEFINED,

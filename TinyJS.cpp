@@ -548,16 +548,16 @@ Var* TinyJS:: parseFuncDefinition(bool assign){
     auto func = new Var();
     func->type = VAR_FUNCTION;
 
-    auto scopeVar = new Var();
-    func->addChild(JS_FUNC_SCOPE, scopeVar);
+    auto funcScopes = new Var();
+    func->addChild(JS_SCOPE, funcScopes);
     int index=0;
-    for(auto x : scopes){
+    for(auto x: scopes){
         stringstream ss;
         ss << index;
-        scopeVar->addChild(ss.str(), x);
+        funcScopes->addChild(ss.str(), x);
         index++;
     }
-    func->addChild(JS_FUNC_SCOPE_VAR_NUM, new Var(index));
+    func->addChild(JS_SCOPE_NUM, new Var(index));
 
     if(!assign)
         lex->match(TK_IDENTIFIER);
@@ -595,17 +595,24 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
         return nullptr;
     }
 
-    Var* scope=new Var();
-    scope->addChild(JS_RETURN_VAR, new Var());
-    auto funcScope  = func->var->findChild(JS_FUNC_SCOPE);
-    auto funcScopeNum = func->var->findChild(JS_FUNC_SCOPE_VAR_NUM);
-    for(int i=0; i<funcScopeNum->var->getInt(); i++){
+
+    scopes.clear();
+    auto funcScope = func->var->findChild(JS_SCOPE)->var;
+    int number=func->var->findChild(JS_SCOPE_NUM)->var->getInt();
+    for(int i=0;i<number;i++){
         stringstream ss;
         ss << i;
-        scope->addChilds(funcScope->var->findChild(ss.str())->var);
+        scopes.push_back(funcScope->findChild(ss.str())->var);
     }
 
-    parent.push_back(scope);
+    auto test = func->var->findChild(JS_SCOPE)->var->findChild("1");
+    if(test!= nullptr){
+        cout<<test->var->findChild("n")->var->getInt()<<endl;
+    }
+
+    Var* scope=new Var();
+    scopes.push_back(scope);
+    scope->addChild(JS_RETURN_VAR, new Var());
 
     int n = num->var->getInt();
     auto inArgus = args->findChild(JS_ARGS_VAR);
@@ -623,15 +630,15 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     lex = new Lex(code);
     lex->getNextToken();
 
-    scopes=parent;
     auto oriState = state;
     while (lex->token.type != TK_EOF) {
         statement(state);
     }
     state = oriState;
-    auto ret = scopes.back()->findChild(JS_RETURN_VAR)->var->copyThis();
-    cout<<ret->type<<endl;
-    delete scopes.back();
+
+    auto ret = scope->findChild(JS_RETURN_VAR)->var;
+    delete scope;
+
     return ret;
 
 }
