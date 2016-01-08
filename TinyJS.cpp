@@ -382,9 +382,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         lex->match(TK_STRING);
         return ret;
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
-        //  TODO: json data
-        lex->match(TK_L_LARGE_BRACKET);
-        auto ret=parseJSON();
+        auto ret=parseJSON(state);
         return ret;
     } else if (lex->token.type == TK_TRUE) {
         lex->match(TK_TRUE);
@@ -404,13 +402,10 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
         }
 
-        vector<Var* > parent;
-        parent.push_back(root);
 
         lex->match(TK_IDENTIFIER);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
-                // TODO: function call
                 string funcName = lex->lastTk.value;
                 auto func = findVar(funcName);
                 lex->match(TK_L_BRACKET);
@@ -419,7 +414,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 auto originLex = lex;
                 auto originScopes = scopes;
 
-                ret = make_shared<VarLink>(callFunction(state, func, args, parent));
+                ret = make_shared<VarLink>(callFunction(state, func, args, scopes));
 
                 lex=originLex;
                 scopes = originScopes;
@@ -429,9 +424,10 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
-                    auto child = ret->var->findChild(varName);
-
+                    ret = ret->var->findChild(varName);
+                    lex->match(TK_IDENTIFIER);
                 }
+                return ret;
             }
         }
         if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
@@ -487,9 +483,37 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     }
     return nullptr;
 }
-shared_ptr<VarLink> TinyJS:: parseJSON(){
+shared_ptr<VarLink> TinyJS:: parseJSON(STATE& state){
+    auto result = make_shared<VarLink>(new Var());
+    auto var = result->var;
 
-    lex->match(TK_R_LARGE_BRACKET);
+    lex->match(TK_L_LARGE_BRACKET);
+    while(true){
+        if(lex->token.type == TK_R_LARGE_BRACKET){
+            lex->match(TK_R_LARGE_BRACKET);
+            break;
+        }
+
+        string name = lex->token.value;
+        lex->match(TK_IDENTIFIER);
+        lex->match(TK_COLON);
+        if(lex->token.type == TK_L_LARGE_BRACKET){//the child also has a json
+            var->addUniqueChild(name, parseJSON(state)->var);
+        }
+        else if(lex->token.type == TK_FUNCTION){
+            lex->match(TK_FUNCTION);
+            var->addUniqueChild(name, parseFuncDefinition(true));
+        }
+        else{
+            var->addUniqueChild(name, eval(state)->var);
+        }
+
+        if(lex->token.type == TK_COMMA){
+            lex->match(TK_COMMA);
+        }
+    }
+
+    return result;
 }
 
 Var* TinyJS:: parseArguments(STATE& state){

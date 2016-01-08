@@ -38,7 +38,7 @@ private:
     shared_ptr<VarLink> factor(STATE& state);
 
     shared_ptr<VarLink> findVar(const string &varName);
-    shared_ptr<VarLink> parseJSON();
+    shared_ptr<VarLink> parseJSON(STATE& state);
 
 public:
     TinyJS(const string& file){

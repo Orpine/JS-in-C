@@ -1,5 +1,7 @@
-function a(i){
-    if(i==0){return 1;}
-    return i*a(i-1);
+a={
+    d : 5,
+    e : function(){
+        return 5;
+    }
 };
-result=a(120.0);
+result= a.e();
