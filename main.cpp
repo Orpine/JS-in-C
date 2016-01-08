@@ -135,6 +135,7 @@ int main() {
 //    tinyJS.root->addChild("result", new Var(0));
     tinyJS.execute();
 
+    cout << tinyJS.root->findChild("result1")->var->getDouble() << endl;
     cout << tinyJS.root->findChild("result")->var->getDouble() << endl;
     return 0;
 }

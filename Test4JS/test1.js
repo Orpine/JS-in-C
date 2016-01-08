@@ -1,4 +1,5 @@
 a={
+  d:5,
   e:function(i){
       if(i==0) {
           return 1;
@@ -8,4 +9,5 @@ a={
       }
   }
 };
+result1 = a.d;
 result= a.e(5);
