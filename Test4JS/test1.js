@@ -1,12 +1,9 @@
-a=1;
-function f1(){
-    var n=999;
-    nAdd=function(){n+=1;};
-    function f2() {
-        return n;
-    };
-    return f2;
+result=0;
+var i=0;
+var j=0;
+for(i=0;i<=5;i++){
+    for(j=0;j<=5;j++){
+        if(j==2) break;
+        result++;
+    }
 }
-var res=f1();
-nAdd();
-result = res();// == 1000;

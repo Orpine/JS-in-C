@@ -177,9 +177,15 @@ void TinyJS::statement(STATE &state) {
     } else if (lex->token.type == TK_EOF) {
 
     } else if (lex->token.type == TK_BREAK) {
-        state = BREAKING;
+        lex->match(TK_BREAK);
+        if (state == RUNNING) {
+            state = BREAKING;
+        }
     } else if (lex->token.type == TK_CONTINUE) {
-        state = CONTINUE;
+        lex->match(TK_CONTINUE);
+        if (state == RUNNING) {
+            state = CONTINUE;
+        }
     } else {
         assert(0);
     }
