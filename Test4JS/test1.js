@@ -8,5 +8,5 @@ function f1(){
     return f2;
 }
 var res=f1();
+nAdd();
 result = res();// == 1000;
-
