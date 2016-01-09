@@ -160,6 +160,8 @@ void TinyJS::statement(STATE &state) {
         if (lex->token.type != TK_SEMICOLON) {
             ret = eval(state);
         }
+        cout<<ret->var->findChild(JS_FUNCBODY_VAR)->var->getString()<<endl;
+        cout<<ret->var->findChild(JS_SCOPE)->var->findChild("1")->var->findChild("n")->var->getInt()<<endl;
         if (state == RUNNING) {
             auto retVar = scopes.back()->findChild(JS_RETURN_VAR);
             assert(retVar != nullptr);
@@ -595,6 +597,7 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
         return nullptr;
     }
 
+    cout<<func->var->findChild(JS_FUNCBODY_VAR)->var->getString()<<endl;
 
     scopes.clear();
     auto funcScope = func->var->findChild(JS_SCOPE)->var;
@@ -636,8 +639,10 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     }
     state = oriState;
 
-    auto ret = scope->findChild(JS_RETURN_VAR)->var;
+    auto ret = scope->findChild(JS_RETURN_VAR)->var->copyThis();
+    cout<<ret->findChild(JS_SCOPE)->var->findChild("1")->var->findChild("n")->var->getInt()<<endl;
     delete scope;
+    cout<<ret->findChild(JS_SCOPE)->var->findChild("1")->var->findChild("n")->var->getInt()<<endl;
 
     return ret;
 
