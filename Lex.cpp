@@ -165,7 +165,7 @@ int Lex::getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk) 
                         }
                     }
                     if (backslashCount % 2 == 0) {
-                        tk.setToken(TK_STRING, str.substr(startPos, i - startPos + 1));
+                        tk.setToken(TK_STRING, str.substr(startPos+1, i - startPos-1));
                         return i + 1;
                         break;
                     }
