@@ -22,11 +22,11 @@ string endline(endLineChar);
 
 
 int main() {
-    string file="D:\\GitHub\\JS-in-C\\Test4JS\\test1.js";
+    string file="./Test4JS/test1.js";
     TinyJS tinyJS(file);
 //    tinyJS.root->addChild("result", new Var(0));
     tinyJS.execute();
 
-    cout << tinyJS.root->findChild("result")->var->getInt() << endl;
+    cout << tinyJS.root->findChild("result")->var->getArrayLength() << endl;
     return 0;
 }

@@ -435,6 +435,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
+
                     ret = ret->var->findChildOrCreate(varName);
                     lex->match(TK_IDENTIFIER);
                 }
@@ -455,7 +456,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
         if (state == RUNNING && !ret) {
-            ret = make_shared<VarLink>(new Var(), lex->token.value);
+            ret = make_shared<VarLink>(new Var("", VAR_ARRAY), lex->token.value);
         }
         Var* var=ret->var;
 
