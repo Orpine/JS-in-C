@@ -118,7 +118,7 @@ Var::~Var() {
 
 
 int Var::getInt() {
-    if (isInt()) return intData;
+    if (isInt() || isBoolean()) return intData;
     if (isDouble()) return (int) doubleData;
     return 0;
 }
@@ -252,10 +252,20 @@ Var *Var::mathOp(Var *b, TOKEN_TYPES op) {
             return new Var(!eql);
     }
 
-    if (a->isUndefined() && b->isUndefined()) {
+
+    if ((a->isUndefined() || a->isNull()) && (b->isUndefined() || b->isNull())) {
         if (op == TK_EQUAL)return new Var("true", VAR_BOOLEAN);
         if (op == TK_N_EQUAL)return new Var("false", VAR_BOOLEAN);
         return new Var();
+    }
+    else if (a->isBoolean() && b->isBoolean()) {
+        if (op == TK_AND_AND) {
+            return new Var(a->getBool() && b->getBool());
+        } else if (op == TK_OR_OR) {
+            return new Var(a->getBool() || b->getBool());
+        } else {
+            assert(0);
+        }
     }
     else if ((a->isNumber() || a->isUndefined()) && (b->isNumber() || b->isUndefined())) {
         if (!a->isDouble() && !b->isDouble()) {

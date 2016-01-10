@@ -242,20 +242,21 @@ shared_ptr<VarLink> TinyJS::logic(STATE &state) {
            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
         lhs = make_shared<VarLink>(lhs->var->copyThis());
         auto op = lex->token.type;
+        lex->match(op);
         bool getBool = false, shortCircuit = false;
 
         if (state == RUNNING) {
-            if (lex->token.type == TK_AND_AND) {
+            if (op == TK_AND_AND) {
                 shortCircuit = !lhs->var->getBool();
                 getBool = true;
-            } else if (lex->token.type == TK_OR_OR) {
+            } else if (op == TK_OR_OR) {
                 shortCircuit = lhs->var->getBool();
                 getBool = true;
             }
         }
 
         STATE skipping = SKIPPING;
-        auto rhs = compare(shortCircuit ? state : skipping);
+        auto rhs = compare(shortCircuit ? skipping : state);
 
         if (state == RUNNING && !shortCircuit) {
             if (getBool) {
@@ -381,7 +382,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         lex->match(lex->token.type);
         return ret;
     } else if (lex->token.type == TK_STRING) {
-        auto ret = make_shared<VarLink>(new Var(lex->token.value));
+        auto ret = make_shared<VarLink>(new Var(lex->token.value.substr(1, lex->token.value.length() - 2)));
         lex->match(TK_STRING);
         return ret;
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
@@ -434,7 +435,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
-                    ret = ret->var->findChild(varName);
+                    ret = ret->var->findChildOrCreate(varName);
                     lex->match(TK_IDENTIFIER);
                 }
             }

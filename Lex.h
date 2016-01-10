@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string>
 #include <unordered_map>
+#include <assert.h>
 
 using namespace std;
 
@@ -109,7 +110,17 @@ public:
     }
 
     int getIntData() {
-        return atoi(value.c_str());
+        if (type == TK_DEC_INT) {
+            return stoi(value, 0, 10);
+        } else if (type == TK_OCTAL_INT) {
+            return stoi(value, 0, 8);
+        } else if (type == TK_HEX_INT) {
+            return stoi(value, 0, 16);
+        } else {
+            assert(0);
+        }
+//        return stoi(value, 0, )
+//        return atoi(value.c_str());
     }
 
     double getFloatData() {
