@@ -465,6 +465,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             item=eval(state);
 
             if(item== nullptr){
+                lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
             stringstream ss;
@@ -623,8 +624,13 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
         stringstream ss;
         ss << i;
 
-        auto tmp = inArgus->var->findChild(ss.str())->var->copyThis();
-        scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
+        auto tmp = inArgus->var->findChild(ss.str())->var;
+        if(tmp->isInt() || tmp->isBoolean() || tmp->isDouble()){
+            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
+        }else{
+            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
+        }
+
     }
 
     string code = func->var->findChild(JS_FUNCBODY_VAR)->var->getString();
