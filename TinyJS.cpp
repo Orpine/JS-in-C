@@ -465,6 +465,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             item=eval(state);
 
             if(item== nullptr){
+                lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
             stringstream ss;

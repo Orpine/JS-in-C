@@ -29,15 +29,22 @@
 //result = blah==0 && z!='foxes' && twenty==20;
 
 
+// references with functions
 
-// references for arrays
+var a = 42;
+var b = [];
+b[0] = 43;
 
-var a = [];
-a[0] = 10;
-a[1] = 22;
+function foo(myarray) {
+    myarray[0]++;
+}
 
-b = a;
+function bar(myvalue) {
+    myvalue++;
+}
 
-b[0] = 5;
+foo(b);
+bar(a);
 
-result = a[0]==5;// && a[1]==22 && b[1]==22;
+result = a==42 && b[0]==44;
+
