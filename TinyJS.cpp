@@ -328,8 +328,10 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
             }
         } else {
             if (state == RUNNING) {
+                auto post = lhs;
+                lhs = make_shared<VarLink>(lhs->var->copyThis(), lhs->name);
                 Var one(1);
-                lhs->replaceWith(lhs->var->mathOp(&one, op == TK_PLUS_PLUS ? TK_PLUS : TK_MINUS));
+                post->replaceWith(post->var->mathOp(&one, op == TK_PLUS_PLUS ? TK_PLUS : TK_MINUS));
             }
         }
     }
@@ -401,6 +403,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         lex->match(TK_UNDEIFNED);
         return make_shared<VarLink>(new Var("undefined", VAR_UNDEFINED));
     } else if (lex->token.type == TK_IDENTIFIER) {
+
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
         if (state == RUNNING && !ret) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
@@ -435,8 +438,11 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
-
-                    ret = ret->var->findChildOrCreate(varName);
+                    if (varName == "length") {
+                        ret = make_shared<VarLink>(new Var(ret->var->getArrayLength()));
+                    } else {
+                        ret = ret->var->findChildOrCreate(varName);
+                    }
                     lex->match(TK_IDENTIFIER);
                 }
             }
@@ -489,8 +495,9 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
         return make_shared<VarLink>(func);
     } else if (lex->token.type == TK_NEW) { // new an object
-        // TODO: new an object
-        return nullptr;
+        lex->match(TK_NEW);
+
+        return make_shared<VarLink>(newObject());
     }
     return nullptr;
 }
@@ -644,8 +651,13 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vec
     }
     state = oriState;
 
-    auto ret = scope->findChild(JS_RETURN_VAR)->var;
-
+    Var* ret;
+    if (scope->findChild(JS_RETURN_VAR)->var->isFunction()) {
+        ret = scope->findChild(JS_RETURN_VAR)->var;//->copyThis();
+    } else {
+        ret = scope->findChild(JS_RETURN_VAR)->var->copyThis();
+        delete scope;
+    }
     return ret;
 
 }
