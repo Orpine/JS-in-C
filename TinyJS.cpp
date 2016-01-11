@@ -427,7 +427,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 auto originLex = lex;
                 auto originScopes = scopes;
 
-                ret = make_shared<VarLink>(callFunction(state, func, args, scopes));
+                ret = make_shared<VarLink>(callFunction(state, func, args));
 
                 lex=originLex;
                 scopes = originScopes;
@@ -499,10 +499,77 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return make_shared<VarLink>(func);
     } else if (lex->token.type == TK_NEW) { // new an object
         lex->match(TK_NEW);
-        return nullptr;
-//        return make_shared<VarLink>(newObject());
+        auto object = findVar(lex->token.value);
+
+        lex->match(TK_IDENTIFIER);
+        lex->match(TK_L_BRACKET);
+        Var* args = parseArguments(state);
+
+        auto originLex = lex;
+        auto originScopes = scopes;
+
+        auto ret = make_shared<VarLink>(newObject(state, object, args));
+
+        lex=originLex;
+        scopes = originScopes;
+
+        return ret;
     }
     return nullptr;
+}
+Var* TinyJS:: newObject(STATE& state, shared_ptr<VarLink> func, Var* args){
+    auto num = args->findChild(JS_PARAMETER_VAR);
+    auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
+    if(num->var->getInt() != funcNum->var->getInt()){
+        cout<<"error: expected number of arguments is "<<funcNum->var->getInt()<<".But it's "<<num->var->getInt()<<" now."<<endl;
+        return nullptr;
+    }
+
+    scopes.clear();
+    auto funcScope = func->var->findChild(JS_SCOPE)->var;
+    int number=func->var->findChild(JS_SCOPE_NUM)->var->getInt();
+    for(int i=0;i<number;i++){
+        stringstream ss;
+        ss << i;
+        scopes.push_back(funcScope->findChild(ss.str())->var);
+    }
+
+    Var* scope=new Var();
+    scopes.push_back(scope);
+    scope->addChild(JS_RETURN_VAR, new Var());
+    scope->addChild(JS_THIS_VAR, new Var());
+
+    int n = num->var->getInt();
+    auto inArgus = args->findChild(JS_ARGS_VAR);
+    auto outArgus = func->var->findChild(JS_ARGS_VAR);
+
+    for(int i=0;i<n;i++){
+        stringstream ss;
+        ss << i;
+
+        auto tmp = inArgus->var->findChild(ss.str())->var;
+        if(tmp->isInt() || tmp->isBoolean() || tmp->isDouble()){
+            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
+        }else{
+            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
+        }
+
+    }
+
+    string code = func->var->findChild(JS_FUNCBODY_VAR)->var->getString();
+    lex = new Lex(code);
+    lex->getNextToken();
+
+    auto oriState = state;
+    while (lex->token.type != TK_EOF) {
+        statement(state);
+    }
+    state = oriState;
+
+    Var* ret=new Var();
+    ret->addChild(JS_THIS_VAR, scope->findChild(JS_THIS_VAR)->var);
+
+    return ret;
 }
 shared_ptr<VarLink> TinyJS:: parseJSON(STATE& state){
     auto result = make_shared<VarLink>(new Var());
@@ -606,7 +673,7 @@ Var* TinyJS:: parseFuncDefinition(bool assign){
     return func;
 }
 
-Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args, vector<Var*> parent){
+Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args){
     auto num = args->findChild(JS_PARAMETER_VAR);
     auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
     if(num->var->getInt() != funcNum->var->getInt()){

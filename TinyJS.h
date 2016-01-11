@@ -40,6 +40,7 @@ private:
     shared_ptr<VarLink> findVar(const string &varName);
     shared_ptr<VarLink> parseJSON(STATE& state);
 
+
 public:
     TinyJS(const string& file){
         const int maxSize = 1000000; // support 1MB code;
@@ -54,8 +55,8 @@ public:
     void execute();
     Var* parseFuncDefinition(bool assign);
     Var* parseArguments(STATE &state);
-    Var* callFunction(STATE& , shared_ptr<VarLink> func, Var* args, vector<Var*> parent);
-
+    Var* callFunction(STATE& , shared_ptr<VarLink> func, Var* args);
+    Var* newObject(STATE& , shared_ptr<VarLink> func, Var* args);
 };
 
 
