@@ -434,6 +434,9 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
                 return ret;
             } else if (lex->token.type == TK_DOT) { // . means record access
+                if (child == false && ret->var->isObject()) {
+                    ret = ret->var->findChild(JS_THIS_VAR);
+                }
                 child=true;
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
@@ -496,8 +499,8 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         return make_shared<VarLink>(func);
     } else if (lex->token.type == TK_NEW) { // new an object
         lex->match(TK_NEW);
-
-        return make_shared<VarLink>(newObject());
+        return nullptr;
+//        return make_shared<VarLink>(newObject());
     }
     return nullptr;
 }

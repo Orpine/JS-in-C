@@ -42,21 +42,26 @@
 //
 //}
 
-function a() {
-    var t = 999;
-    nAdd = function() {
-        t ++;
-    };
-    function b() {
-      return t;
-    }
-    return b;
+var Foo = {
+    value : function() { return this.x + this.y; }
+};
+
+// var a = { prototype: Foo, x: 1, y: 2 };
+var b = new Foo();
+b.x = 2;
+b.y = 3;
+
+// var result1 = a.value();
+var result2 = b.value();
+result = result2==5;
+
+
+function Person(name) {
+    this.name = name;
+    this.kill = function() { this.name += " is dead"; };
 }
 
-res = a();
-nAdd();
-res2 = a();
-nAdd();
-nAdd();
+var a = new Person("Kenny");
+a.kill();
+result = a.name == "Kenny is dead";
 
-result = res() == 1000 && res2() == 1001;
