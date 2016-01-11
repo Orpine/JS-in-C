@@ -26,7 +26,7 @@ void TinyJS::statement(STATE &state) {
         lex->token.type == TK_OCTAL_INT ||
         lex->token.type == TK_FLOAT ||
         lex->token.type == TK_STRING ||
-        lex->token.type == TK_MINUS) {
+        lex->token.type == TK_MINUS || lex->token.type == TK_THIS) {
         eval(state);
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
@@ -402,15 +402,16 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     } else if (lex->token.type == TK_UNDEIFNED) {
         lex->match(TK_UNDEIFNED);
         return make_shared<VarLink>(new Var("undefined", VAR_UNDEFINED));
-    } else if (lex->token.type == TK_IDENTIFIER) {
+    } else if (lex->token.type == TK_IDENTIFIER || lex->token.type == TK_THIS) {
 
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
+        auto id = lex->token.type;
         if (state == RUNNING && !ret) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
         }
 
         bool child=false;
-        lex->match(TK_IDENTIFIER);
+        lex->match(lex->token.type);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
                 shared_ptr<VarLink> func;
@@ -434,7 +435,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
                 return ret;
             } else if (lex->token.type == TK_DOT) { // . means record access
-                if (child == false && ret->var->isObject()) {
+                if (!child && ret->var->isObject() && id != TK_THIS) {
                     ret = ret->var->findChild(JS_THIS_VAR);
                 }
                 child=true;
