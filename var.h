@@ -19,15 +19,17 @@ class Var;
 
 class VarLink;
 
-typedef void (*Callback)(Var *var, void *data);
 
-#define JS_RETURN_VAR "__builtin__return"
+#define JS_RETURN_VAR   "__builtin__return"
 #define JS_FUNCBODY_VAR "__builtin__body"
-#define JS_PARAMETER_VAR "__builtin__param"
-#define JS_ARGS_VAR "__builtin__args"
-#define JS_SCOPE    "__builtin__scope"
-#define JS_SCOPE_NUM "__builtin__scope__num"
-#define JS_THIS_VAR "this"
+#define JS_ARGC_VAR     "__builtin__argc"
+#define JS_ARGV_VAR     "__builtin__argv"
+#define JS_SCOPE        "__builtin__scope"
+#define JS_SCOPE_NUM    "__builtin__scope__num"
+#define JS_THIS_VAR     "this"
+#define ANONYMOUS_VAR   ""
+#define VAR_BLANK       ""
+
 
 enum VAR_TYPES {
     VAR_UNDEFINED,
@@ -44,17 +46,10 @@ enum VAR_TYPES {
 
 class Var {
 protected:
-    int refNum; //
+    int refNum;
     std::string stringData;
-    //
     int intData; //int and bool
     double doubleData;
-
-    bool native;
-    //is native function
-    Callback callback;
-    // callback for native functions
-    void *callbackData;//
 
     void init();
 
@@ -62,9 +57,6 @@ public:
     int type;
     std::shared_ptr<VarLink> firstChild;
     std::shared_ptr<VarLink> lastChild;
-//    vector<Token*> valueTokens;
-//    vector<VarLink*> args;
-    int len;
 
     Var();
 
@@ -95,8 +87,6 @@ public:
 
     bool isBoolean() { return (type == VAR_BOOLEAN); }
 
-    bool isNative() { return (native); }
-
     bool isUndefined() { return (type == VAR_UNDEFINED); }
 
     bool isNull() { return (type == VAR_NULL); }
@@ -111,8 +101,6 @@ public:
 
     std::string getString();
 
-    std::string getParsableString();
-
     void setInt(int _int);
 
     void setBool(bool _bool);
@@ -123,13 +111,7 @@ public:
 
     void setUndefined();
 
-    void setArray();
-
-    bool equals(Var *var);
-
     Var *mathOp(Var *b, TOKEN_TYPES op);
-
-    void copyValueFrom(Var *var);
 
     Var *copyThis();
 
@@ -139,17 +121,11 @@ public:
 
     std::shared_ptr<VarLink> findChildOrCreate(const std::string &childName, int childType = VAR_UNDEFINED);
 
-    std::shared_ptr<VarLink> findChildByPath(const std::string &path);
-
     std::shared_ptr<VarLink> addChild(const std::string &childName, Var *child = NULL);
 
     std::shared_ptr<VarLink> addUniqueChild(const std::string &childName, Var *child = NULL);
 
-    bool checkChild(const std::string &childName) { return (bool) findChild(childName); };
-
     void removeChild(Var *child);
-
-    void addChilds(Var *parent);
 
     void removeLink(std::shared_ptr<VarLink> link);
 
@@ -166,8 +142,6 @@ public:
 
 };
 
-const std::string ANONYMOUS_VAR = "";
-const std::string VAR_BLANK = "";
 
 class VarLink {
 public:
@@ -179,9 +153,9 @@ public:
 
     VarLink(Var *var, const std::string &name = ANONYMOUS_VAR);
 
+    //copy constructor
     VarLink(const VarLink &link);
 
-    //copy constructor
     ~VarLink();
 
     void replaceWith(Var *var);

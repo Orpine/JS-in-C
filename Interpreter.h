@@ -60,7 +60,7 @@ public:
         FILE *fin = fopen(file.c_str(), "r");
         fread(code, 1, maxSize, fin);
         this->code = string(code);
-        root = (new Var(VAR_BLANK, VAR_OBJECT))->ref();
+        root = new Var(VAR_BLANK, VAR_OBJECT);
     }
 
     Var *root;

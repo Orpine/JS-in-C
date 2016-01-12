@@ -138,7 +138,6 @@ private:
 
 public:
     string originalStr = "";
-    vector<Token> tokens;
 
     Token lastTk;
     Token token;

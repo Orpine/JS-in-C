@@ -42,7 +42,6 @@ void Var::init() {
     intData = 0;
     doubleData = 0;
     stringData = "";
-    native = false;
 }
 
 Var *Var::ref() {
@@ -148,29 +147,6 @@ std::string Var::getString() {
     return stringData;
 }
 
-std::string Var::getParsableString() {
-    if (isNumber() || isBoolean())
-        return getString();
-    if (isFunction()) {
-        stringstream ss;
-        ss << "function (";
-        auto link = firstChild;
-        while (link) {
-            ss << link->name;
-            if (link->nextSibling) ss << ",";
-            link = link->nextSibling;
-        }
-        ss << ") " << getString();
-        return ss.str();
-    }
-    if (isString()) {
-        stringstream ss;
-        //TODO
-        return getString();
-    }
-    assert(0);
-    return "";
-}
 
 void Var::setInt(int _int) {
     type = VAR_INTEGER;
@@ -206,21 +182,6 @@ void Var::setUndefined() {
     doubleData = 0;
     stringData = "";
     removeAllChildren();
-}
-
-void Var::setArray() {
-    type = VAR_ARRAY;
-    intData = 0;
-    doubleData = 0;
-    stringData = "";
-    removeAllChildren();
-}
-
-bool Var::equals(Var *var) {
-    Var *temp = mathOp(var, TK_EQUAL);
-    bool ret = temp->getBool();
-    delete temp;
-    return ret;
 }
 
 Var *Var::mathOp(Var *b, TOKEN_TYPES op) {
@@ -370,14 +331,6 @@ std::shared_ptr<VarLink> Var::findChildOrCreate(const std::string &childName, in
         return addChild(childName, new Var("", childType));
 }
 
-std::shared_ptr<VarLink> Var::findChildByPath(const std::string &path) {
-    int pos = path.find('.');
-    if (pos == string::npos)
-        return findChildOrCreate(path);
-    else
-        return findChildOrCreate(path.substr(0, pos), VAR_OBJECT)->var->findChildByPath(path.substr(pos + 1));
-}
-
 std::shared_ptr<VarLink> Var::addChild(const std::string &childName, Var *child) {
     if (isUndefined())
         type = VAR_OBJECT;
@@ -463,38 +416,6 @@ int Var::getArrayLength() {
     }
     return max + 1;
 
-}
-
-
-void Var::copyValueFrom(Var *var) {
-    if (var) {
-        copy(var);
-
-        removeAllChildren();
-        auto link = var->firstChild;
-        while (link) {
-            Var *copiedVar = link->var->copyThis();
-            addChild(link->name, copiedVar);
-            link = link->nextSibling;
-        }
-    }
-    else {
-        setUndefined();
-    }
-}
-
-void Var::addChilds(Var *parent) {
-    if (parent) {
-        auto link = parent->firstChild;
-
-        while (link) {
-            if (link->var != this) {
-                addUniqueChild(link->name, link->var->ref());
-
-            }
-            link = link->nextSibling;
-        }
-    }
 }
 
 Var *Var::copyThis() {

@@ -39,12 +39,19 @@ void Interpreter::statement(STATE &state) {
         lex->match(TK_IDENTIFIER);
 
         auto scope = scopes.back();
+        auto v = scope->findChild(varName);
         if (lex->token.type == TK_ASSIGN) {
             lex->match(TK_ASSIGN);
             auto item = eval(state);
-            scope->addUniqueChild(varName, item->var);
+            if (v == nullptr) {
+                scope->addUniqueChild(varName, item->var);
+            } else {
+                v->replaceWith(item->var);
+            }
         } else if (lex->token.type == TK_SEMICOLON) {
-            scope->addUniqueChild(varName, new Var());
+            if (v == nullptr) {
+                scope->addUniqueChild(varName, new Var());
+            }
         }
 
         lex->match(TK_SEMICOLON);
@@ -194,10 +201,10 @@ void Interpreter::statement(STATE &state) {
 shared_ptr<VarLink> Interpreter::eval(STATE &state) {
     auto lhs = ternary(state);
     if (lex->token.type == TK_ASSIGN || lex->token.type == TK_PLUS_EQUAL || lex->token.type == TK_MINUS_EQUAL) {
-        if (state == RUNNING && !lhs->owned) {
-            assert(lhs->name.length() != 0);
-            lhs = root->addUniqueChild(lhs->name, lhs->var);
-        }
+//        if (state == RUNNING && !lhs->owned) {
+//            assert(lhs->name.length() != 0);
+//            lhs = root->addUniqueChild(lhs->name, lhs->var);
+//        }
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = eval(state);
@@ -304,7 +311,7 @@ shared_ptr<VarLink> Interpreter::shift(STATE &state) {
     return ret;
 }
 
-shared_ptr<VarLink> Interpreter::expression(STATE &state) {
+shared_ptr<VarLink> Interpreter::expression(STATE &state) { // handle term +- term
     bool negative = false;
     if (lex->token.type == TK_MINUS) {
         lex->match(TK_MINUS);
@@ -352,7 +359,7 @@ shared_ptr<VarLink> Interpreter::term(STATE &state) {  // handle *, /, % operato
     return lhs;
 }
 
-shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! operator
+shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! and ~ operator
     if (lex->token.type == TK_NOT) {
         lex->match(TK_NOT);
         auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
@@ -360,6 +367,14 @@ shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! operator
             ret->replaceWith(new Var(!(ret->var->getBool())));
         }
         return ret;
+    } else if (lex->token.type == TK_BITWISE_NOT) {
+        lex->match(TK_BITWISE_NOT);
+        auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
+        if (state == RUNNING) {
+            ret->replaceWith(new Var(~(ret->var->getInt())));
+        }
+        return ret;
+
     } else {
         return factor(state);
     }
@@ -407,12 +422,12 @@ shared_ptr<VarLink> Interpreter::factor(STATE &state) {
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
         auto id = lex->token.type;
         if (state == RUNNING && !ret) {
-            ret = make_shared<VarLink>(new Var(), lex->token.value);
+            ret = root->addUniqueChild(lex->token.value, new Var());
         }
 
         bool child = false;
         lex->match(lex->token.type);
-        while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
+        while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT || lex->token.type == TK_L_SQUARE_BRACKET) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
                 shared_ptr<VarLink> func;
                 if (child) {
@@ -449,16 +464,16 @@ shared_ptr<VarLink> Interpreter::factor(STATE &state) {
                     }
                     lex->match(TK_IDENTIFIER);
                 }
-            }
-        }
-        if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
-            lex->match(TK_L_SQUARE_BRACKET);
+            } else if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array access
+                lex->match(TK_L_SQUARE_BRACKET);
 
-            auto idx = eval(state);
-            if (state == RUNNING) {
-                ret = ret->var->findChildOrCreate(idx->var->getString());
+                auto idx = eval(state);
+                if (state == RUNNING) {
+                    ret = ret->var->findChildOrCreate(idx->var->getString());
+                }
+                lex->match(TK_R_SQUARE_BRACKET);
             }
-            lex->match(TK_R_SQUARE_BRACKET);
+
         }
         return ret;
     } else if (lex->token.type == TK_L_SQUARE_BRACKET) { // [ means array declaration
@@ -518,8 +533,8 @@ shared_ptr<VarLink> Interpreter::factor(STATE &state) {
 }
 
 Var *Interpreter::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
-    auto num = args->findChild(JS_PARAMETER_VAR);
-    auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
+    auto num = args->findChild(JS_ARGC_VAR);
+    auto funcNum = func->var->findChild(JS_ARGC_VAR);
     if (num->var->getInt() != funcNum->var->getInt()) {
         cout << "error: expected number of arguments is " << funcNum->var->getInt() << ".But it's " <<
         num->var->getInt() << " now." << endl;
@@ -539,8 +554,8 @@ Var *Interpreter::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
     scope->addChild(JS_THIS_VAR, new Var());
 
     int n = num->var->getInt();
-    auto inArgus = args->findChild(JS_ARGS_VAR);
-    auto outArgus = func->var->findChild(JS_ARGS_VAR);
+    auto inArgus = args->findChild(JS_ARGV_VAR);
+    auto outArgus = func->var->findChild(JS_ARGV_VAR);
 
     for (int i = 0; i < n; i++) {
         stringstream ss;
@@ -573,7 +588,8 @@ Var *Interpreter::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
 
 shared_ptr<VarLink> Interpreter::parseJSON(STATE &state) {
     auto result = make_shared<VarLink>(new Var());
-    auto var = result->var;
+    auto var = result->var->findChildOrCreate(JS_THIS_VAR)->var;
+
 
     lex->match(TK_L_LARGE_BRACKET);
     while (true) {
@@ -606,8 +622,8 @@ shared_ptr<VarLink> Interpreter::parseJSON(STATE &state) {
 
 Var *Interpreter::parseArguments(STATE &state) {
     Var *args = new Var();
-    args->addChild(JS_ARGS_VAR, new Var());
-    auto params = args->findChild(JS_ARGS_VAR);
+    args->addChild(JS_ARGV_VAR, new Var());
+    auto params = args->findChild(JS_ARGV_VAR);
 
     int index = 0;
     while (true) {
@@ -624,7 +640,7 @@ Var *Interpreter::parseArguments(STATE &state) {
         index++;
     }
 
-    args->addChild(JS_PARAMETER_VAR, new Var(index));
+    args->addChild(JS_ARGC_VAR, new Var(index));
     return args;
 }
 
@@ -661,15 +677,15 @@ Var *Interpreter::parseFuncDefinition(bool assign) {
         lex->match(TK_IDENTIFIER);
     }
 
-    func->addChild(JS_PARAMETER_VAR, new Var(count));
-    func->addChild(JS_ARGS_VAR, args);
+    func->addChild(JS_ARGC_VAR, new Var(count));
+    func->addChild(JS_ARGV_VAR, args);
     func->addChild(JS_FUNCBODY_VAR, new Var(lex->getFunctionBody()));
     return func;
 }
 
 Var *Interpreter::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
-    auto num = args->findChild(JS_PARAMETER_VAR);
-    auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
+    auto num = args->findChild(JS_ARGC_VAR);
+    auto funcNum = func->var->findChild(JS_ARGC_VAR);
     if (num->var->getInt() != funcNum->var->getInt()) {
         cout << "error: expected number of arguments is " << funcNum->var->getInt() << ".But it's " <<
         num->var->getInt() << " now." << endl;
@@ -688,8 +704,8 @@ Var *Interpreter::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args
     scope->addChild(JS_RETURN_VAR, new Var());
 
     int n = num->var->getInt();
-    auto inArgus = args->findChild(JS_ARGS_VAR);
-    auto outArgus = func->var->findChild(JS_ARGS_VAR);
+    auto inArgus = args->findChild(JS_ARGV_VAR);
+    auto outArgus = func->var->findChild(JS_ARGV_VAR);
 
     for (int i = 0; i < n; i++) {
         stringstream ss;

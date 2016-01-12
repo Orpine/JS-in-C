@@ -260,7 +260,6 @@ int Lex::getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk) 
 
 
 void Lex::match(TOKEN_TYPES expected_token) {
-//    while(token.type == TK_NOT_VALID)
     if (token.type != expected_token) {
         cout << "Got " << getTokenStr(token.type) << " expected " << getTokenStr(expected_token) << endl;
     }
