@@ -479,9 +479,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
-            stringstream ss;
-            ss << index;
-            var->addChild(ss.str(), item->var);
+            var->addChild(to_string(index), item->var);
             if (lex->token.type == TK_R_SQUARE_BRACKET) {
                 lex->match(TK_R_SQUARE_BRACKET);
                 break;
@@ -532,9 +530,7 @@ Var *TinyJS::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto funcScope = func->var->findChild(JS_SCOPE)->var;
     int number = func->var->findChild(JS_SCOPE_NUM)->var->getInt();
     for (int i = 0; i < number; i++) {
-        stringstream ss;
-        ss << i;
-        scopes.push_back(funcScope->findChild(ss.str())->var);
+        scopes.push_back(funcScope->findChild(to_string(i))->var);
     }
 
     Var *scope = new Var();
@@ -624,9 +620,7 @@ Var *TinyJS::parseArguments(STATE &state) {
         }
 
         auto arg = eval(state);
-        stringstream ss;
-        ss << index;
-        params->var->addChild(ss.str(), arg->var);
+        params->var->addChild(to_string(index), arg->var);
         index++;
     }
 
@@ -642,9 +636,7 @@ Var *TinyJS::parseFuncDefinition(bool assign) {
     func->addChild(JS_SCOPE, funcScopes);
     int index = 0;
     for (auto x: scopes) {
-        stringstream ss;
-        ss << index;
-        funcScopes->addChild(ss.str(), x);
+        funcScopes->addChild(to_string(index), x);
         index++;
     }
     func->addChild(JS_SCOPE_NUM, new Var(index));
@@ -664,9 +656,7 @@ Var *TinyJS::parseFuncDefinition(bool assign) {
             lex->match(TK_COMMA);
         }
 
-        stringstream ss;
-        ss << count;
-        args->addChild(ss.str(), new Var(lex->token.value));
+        args->addChild(to_string(count), new Var(lex->token.value));
         count++;
         lex->match(TK_IDENTIFIER);
     }
@@ -690,9 +680,7 @@ Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto funcScope = func->var->findChild(JS_SCOPE)->var;
     int number = func->var->findChild(JS_SCOPE_NUM)->var->getInt();
     for (int i = 0; i < number; i++) {
-        stringstream ss;
-        ss << i;
-        scopes.push_back(funcScope->findChild(ss.str())->var);
+        scopes.push_back(funcScope->findChild(to_string(i))->var);
     }
 
     Var *scope = new Var();
@@ -706,14 +694,12 @@ Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
     for (int i = 0; i < n; i++) {
         stringstream ss;
         ss << i;
-
         auto tmp = inArgus->var->findChild(ss.str())->var;
         if (tmp->isInt() || tmp->isBoolean() || tmp->isDouble()) {
             scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
         } else {
             scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp);
         }
-
     }
 
     string code = func->var->findChild(JS_FUNCBODY_VAR)->var->getString();
@@ -728,7 +714,7 @@ Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
 
     Var *ret;
     if (scope->findChild(JS_RETURN_VAR)->var->isFunction()) {
-        ret = scope->findChild(JS_RETURN_VAR)->var;//->copyThis();
+        ret = scope->findChild(JS_RETURN_VAR)->var;
     } else {
         ret = scope->findChild(JS_RETURN_VAR)->var->copyThis();
         delete scope;
