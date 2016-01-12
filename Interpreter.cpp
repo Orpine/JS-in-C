@@ -2,7 +2,7 @@
 // Created by user on 2015/12/30.
 //
 
-#include "TinyJS.h"
+#include "Interpreter.h"
 #include <fstream>
 #include <assert.h>
 
@@ -673,7 +673,7 @@ Var *TinyJS::parseFuncDefinition(bool assign) {
 
     func->addChild(JS_PARAMETER_VAR, new Var(count));
     func->addChild(JS_ARGS_VAR, args);
-    func->addChild(JS_FUNCBODY_VAR, new Var(lex->getSubString()));
+    func->addChild(JS_FUNCBODY_VAR, new Var(lex->getFunctionBody()));
     return func;
 }
 

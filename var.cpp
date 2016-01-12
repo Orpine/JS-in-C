@@ -1,4 +1,4 @@
-#include "var.h"
+#include "Var.h"
 
 VarLink::VarLink(Var *var, const std::string &name) {
     this->name = name;

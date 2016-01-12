@@ -10,7 +10,7 @@
 #include <fstream>
 #include "Lex.h"
 
-#include "TinyJS.h"
+#include "Interpreter.h"
 
 using namespace std;
 

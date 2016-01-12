@@ -31,8 +31,6 @@ Lex::Lex() {
     token.type = TK_NOT_VALID;
     lastTk.type = TK_NOT_VALID;
 
-    tokenStart = 0;
-    tokenEnd = 0;
     tokenLastEnd = 0;
     posNow = 0;
 }
@@ -44,10 +42,7 @@ Lex::Lex(const string &str) : originalStr(str) {
 
     tokenLastEnd = 0;
 
-    tokenStart = 0;
-    tokenEnd = (int) str.length();
     posNow = 0;
-    //        getLex();
 };
 
 void Lex::reset() {
@@ -282,7 +277,7 @@ string Lex::getTokenStr(TOKEN_TYPES tkType) {
     return string("?[" + ss.str() + "]");
 }
 
-string Lex::getSubString() {
+string Lex::getFunctionBody() {
     int count = 1;
     int prePos = posNow;
     int start = posNow - 1;
@@ -315,9 +310,6 @@ Lex *Lex::getSubLex(int lastPosition) {
 
 }
 
-//string Lex::getPosition(int pos) {
-//    return __1::basic_string<char, char_traits<char>, allocator<char>>();
-//}
 
 void Lex::initialTokenMap() {
     // value properties

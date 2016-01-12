@@ -3,7 +3,7 @@ project(TinyJS)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES Lex.cpp Lex.h main.cpp var.cpp TinyJS.cpp TinyJS.h var.h)
+set(SOURCE_FILES Lex.cpp Lex.h main.cpp Var.cpp Interpreter.cpp Interpreter.h Var.h)
 set(MAIN  main.cpp)
 set(LEX_TEST lex_test.cpp)
 set(VAR_TEST var_test.cpp)

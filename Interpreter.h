@@ -6,7 +6,7 @@
 #define TINYJS_TINYJS_H
 
 #include "Lex.h"
-#include "var.h"
+#include "Var.h"
 #include <string>
 #include <vector>
 #include <stdio.h>

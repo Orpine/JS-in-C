@@ -116,9 +116,8 @@ public:
             return stoi(value, 0, 16);
         } else {
             assert(0);
+            return 0;
         }
-//        return stoi(value, 0, )
-//        return atoi(value.c_str());
     }
 
     double getFloatData() {
@@ -138,16 +137,11 @@ private:
     //return this token's endpos + 1
 
 public:
-//    bool tkgot = false;
     string originalStr = "";
     vector<Token> tokens;
 
     Token lastTk;
     Token token;
-//    string tokenStr;
-
-    int tokenStart;
-    int tokenEnd;
 
     int tokenLastEnd;
     int posNow = 0;
@@ -170,7 +164,7 @@ public:
 
     void reset();
 
-    string getSubString();
+    string getFunctionBody();
 
     Lex *getSubLex(int lastPosition);
 
@@ -192,30 +186,6 @@ public:
 
     }
 
-    void getLex() {
-        if (originalStr == "") {
-            cout << "The lex has no string, use setString and try again" << endl;
-            return;
-        }
-
-        int oldPos = 0;
-        int pos = 0;
-        Token tk;
-        tk.type = TK_NOT_VALID;
-        Token lastTk;
-        while (pos != originalStr.length()) {
-            oldPos = pos;
-            lastTk = tk;
-            pos = getNextTokenInner(originalStr, pos, tk, lastTk);
-            if (pos == -1) {
-                cout << "Lex error: " << originalStr.substr(oldPos) << endl;
-                return;
-            }
-            if (tk.type != TK_NOT_VALID) {
-                tokens.push_back(tk);
-            }
-        }
-    }
 };
 
 
