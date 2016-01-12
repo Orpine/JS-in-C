@@ -22,14 +22,15 @@ set<TOKEN_TYPES> tokenBeforePrefix{
     TK_AND_EQUAL,
     TK_OR_EQUAL,
     TK_L_EQUAL,
-    TK_G_EQUAL, };
+    TK_G_EQUAL,
+};
 
-Lex::Lex(){
+Lex::Lex() {
     initialTokenMap();
-    
+
     token.type = TK_NOT_VALID;
     lastTk.type = TK_NOT_VALID;
-    
+
     tokenStart = 0;
     tokenEnd = 0;
     tokenLastEnd = 0;
@@ -40,24 +41,23 @@ Lex::Lex(const string &str) : originalStr(str) {
     initialTokenMap();
     token.type = TK_NOT_VALID;
     lastTk.type = TK_NOT_VALID;
-    
+
     tokenLastEnd = 0;
-    
+
     tokenStart = 0;
-    tokenEnd = (int)str.length();
+    tokenEnd = (int) str.length();
     posNow = 0;
     //        getLex();
 };
 
-void Lex::reset(){
+void Lex::reset() {
     token.type = TK_NOT_VALID;
     lastTk.type = TK_NOT_VALID;
-    
+
     tokenLastEnd = 0;
-    
+
     posNow = 0;
 }
-
 
 
 int Lex::getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk) {
@@ -278,29 +278,29 @@ string Lex::getTokenStr(TOKEN_TYPES tkType) {
     }
 
     stringstream ss;
-    ss << (int)tkType;
+    ss << (int) tkType;
     return string("?[" + ss.str() + "]");
 }
 
 string Lex::getSubString() {
-    int count=1;
-    int prePos=posNow;
-    int start=posNow-1;
-    int len=1;
+    int count = 1;
+    int prePos = posNow;
+    int start = posNow - 1;
+    int len = 1;
 
 
-    while(count>0){
+    while (count > 0) {
         this->getNextToken();
-        if(token.value == "{"){
+        if (token.value == "{") {
             count++;
         }
-        if(token.value == "}"){
+        if (token.value == "}") {
             count--;
         }
     };
 
-    len=posNow-prePos;
-    string result = originalStr.substr(start, len+1);
+    len = posNow - prePos;
+    string result = originalStr.substr(start, len + 1);
     this->match(TK_R_LARGE_BRACKET);
 
     return result;
@@ -312,7 +312,7 @@ Lex *Lex::getSubLex(int lastPosition) {
         return nullptr;
     }
     return new Lex(originalStr.substr(lastPosition - 1, tokenLastEnd - lastPosition + 2));
-    
+
 }
 
 //string Lex::getPosition(int pos) {
@@ -351,25 +351,25 @@ void Lex::initialTokenMap() {
     tokenMap["super"] = TK_SUPER;
     tokenMap["delete"] = TK_DELETE;
     tokenMap["typeof"] = TK_TYPEOF;
-    
+
     //done
     tokenMap["++"] = TK_PLUS_PLUS;
     tokenMap["--"] = TK_MINUS_MINUS;
     tokenMap["+"] = TK_PLUS;
     tokenMap["-"] = TK_MINUS;
     tokenMap["~"] = TK_BITWISE_NOT;
-    
+
     tokenMap["!"] = TK_NOT;
     tokenMap["*"] = TK_MULTIPLY;
     tokenMap["/"] = TK_DIVIDE;
     tokenMap["%"] = TK_MOD;
-    
+
     tokenMap["**"] = TK_EXPONENT;
     tokenMap["<"] = TK_LESS;
     tokenMap[">"] = TK_GREATER;
     tokenMap["<="] = TK_L_EQUAL;
     tokenMap[">="] = TK_G_EQUAL;
-    
+
     tokenMap["=="] = TK_EQUAL;
     tokenMap["!="] = TK_N_EQUAL;
     tokenMap["==="] = TK_TYPEEQUAL;
@@ -392,7 +392,7 @@ void Lex::initialTokenMap() {
     tokenMap["&="] = TK_AND_EQUAL;
     tokenMap["^="] = TK_XOR_EQUAL;
     tokenMap["|="] = TK_OR_EQUAL;
-    
+
     tokenMap["true"] = TK_TRUE;
     tokenMap["false"] = TK_FALSE;
     //done
@@ -407,7 +407,7 @@ void Lex::initialTokenMap() {
     tokenMap[":"] = TK_COLON;
     tokenMap[","] = TK_COMMA;
     tokenMap["?"] = TK_QUESTION_MARK;
-    
+
     // value properties
     invTokenMap[TK_EOF] = "eof";
     invTokenMap[TK_IDENTIFIER] = "ID";
@@ -417,8 +417,8 @@ void Lex::initialTokenMap() {
     invTokenMap[TK_HEX_INT] = "hex int";
     invTokenMap[TK_FLOAT] = "float";
     invTokenMap[TK_STRING] = "string";
-    
-    
+
+
     invTokenMap[TK_INFINITY] = "Infinity";
     invTokenMap[TK_NAN] = "NaN";
     invTokenMap[TK_UNDEIFNED] = "undefined";
@@ -449,25 +449,25 @@ void Lex::initialTokenMap() {
     invTokenMap[TK_SUPER] = "super";
     invTokenMap[TK_DELETE] = "delete";
     invTokenMap[TK_TYPEOF] = "typeof";
-    
+
     //done
     invTokenMap[TK_PLUS_PLUS] = "++";
     invTokenMap[TK_MINUS_MINUS] = "--";
     invTokenMap[TK_PLUS] = "+";
     invTokenMap[TK_MINUS] = "-";
     invTokenMap[TK_BITWISE_NOT] = "~";
-    
+
     invTokenMap[TK_NOT] = "!";
     invTokenMap[TK_MULTIPLY] = "*";
     invTokenMap[TK_DIVIDE] = "/";
     invTokenMap[TK_MOD] = "%";
-    
+
     invTokenMap[TK_EXPONENT] = "**";
     invTokenMap[TK_LESS] = "<";
     invTokenMap[TK_GREATER] = ">";
     invTokenMap[TK_L_EQUAL] = "<=";
     invTokenMap[TK_G_EQUAL] = ">=";
-    
+
     invTokenMap[TK_EQUAL] = "==";
     invTokenMap[TK_N_EQUAL] = "!=";
     invTokenMap[TK_TYPEEQUAL] = "===";
@@ -490,7 +490,7 @@ void Lex::initialTokenMap() {
     invTokenMap[TK_AND_EQUAL] = "&=";
     invTokenMap[TK_XOR_EQUAL] = "^=";
     invTokenMap[TK_OR_EQUAL] = "|=";
-    
+
     invTokenMap[TK_TRUE] = "true";
     invTokenMap[TK_FALSE] = "false";
     //done

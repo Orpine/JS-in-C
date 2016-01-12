@@ -88,12 +88,10 @@ enum TOKEN_TYPES {
     TK_PLUS, TK_MINUS, TK_MULTIPLY, TK_DIVIDE, TK_MOD, TK_EXPONENT,
     TK_NOT,
     TK_BITWISE_NOT, TK_BITWISE_AND, TK_BITWISE_OR, TK_BITWISE_XOR,
-
     TK_LESS, TK_GREATER,
 
     //标点符号
     TK_DOT, TK_SEMICOLON, TK_COLON, TK_COMMA, TK_QUESTION_MARK,
-
     TK_EOF
 };
 
@@ -135,28 +133,30 @@ class Lex {
 private:
     map<string, TOKEN_TYPES> tokenMap;
     map<TOKEN_TYPES, string> invTokenMap;
+
     int getNextTokenInner(string &str, int startPos, Token &tk, Token &lastTk);
     //return this token's endpos + 1
-    
+
 public:
 //    bool tkgot = false;
     string originalStr = "";
     vector<Token> tokens;
-    
+
     Token lastTk;
     Token token;
 //    string tokenStr;
 
     int tokenStart;
     int tokenEnd;
-    
+
     int tokenLastEnd;
     int posNow = 0;
-    
-    
+
+
     Lex();
+
     Lex(const string &str);
-    
+
     void initialTokenMap();
 
     void setString(const string &str) {
@@ -165,15 +165,18 @@ public:
 
 
     void match(TOKEN_TYPES expected_token);
+
     string getTokenStr(TOKEN_TYPES token);
+
     void reset();
 
     string getSubString();
-    Lex* getSubLex(int lastPosition);
+
+    Lex *getSubLex(int lastPosition);
 
 
     void getNextToken() {
-        
+
         lastTk = token;
         if (posNow > 0) {
             tokenLastEnd = posNow - 1;
@@ -214,7 +217,6 @@ public:
         }
     }
 };
-
 
 
 #endif /* Lex_hpp */

@@ -110,8 +110,6 @@ Var::Var(double varData) {
 }
 
 
-
-
 Var::~Var() {
     removeAllChildren();
 }

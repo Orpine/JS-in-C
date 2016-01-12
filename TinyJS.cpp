@@ -35,15 +35,15 @@ void TinyJS::statement(STATE &state) {
         lex->match(TK_SEMICOLON);
     } else if (lex->token.type == TK_VAR) {
         lex->match(TK_VAR);
-        string varName=lex->token.value;
+        string varName = lex->token.value;
         lex->match(TK_IDENTIFIER);
 
-        auto scope=scopes.back();
-        if(lex->token.type==TK_ASSIGN){
-           lex->match(TK_ASSIGN);
-           auto item=eval(state);
-           scope->addUniqueChild(varName, item->var);
-        }else if(lex->token.type==TK_SEMICOLON){
+        auto scope = scopes.back();
+        if (lex->token.type == TK_ASSIGN) {
+            lex->match(TK_ASSIGN);
+            auto item = eval(state);
+            scope->addUniqueChild(varName, item->var);
+        } else if (lex->token.type == TK_SEMICOLON) {
             scope->addUniqueChild(varName, new Var());
         }
 
@@ -388,7 +388,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         lex->match(TK_STRING);
         return ret;
     } else if (lex->token.type == TK_L_LARGE_BRACKET) {
-        auto ret=parseJSON(state);
+        auto ret = parseJSON(state);
         return ret;
     } else if (lex->token.type == TK_TRUE) {
         lex->match(TK_TRUE);
@@ -410,27 +410,27 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
             ret = make_shared<VarLink>(new Var(), lex->token.value);
         }
 
-        bool child=false;
+        bool child = false;
         lex->match(lex->token.type);
         while (lex->token.type == TK_L_BRACKET || lex->token.type == TK_DOT) {
             if (lex->token.type == TK_L_BRACKET) { // ( means a function call
                 shared_ptr<VarLink> func;
-                if(child){
-                    func=ret;
+                if (child) {
+                    func = ret;
                 }
                 else {
                     func = findVar(lex->lastTk.value);
                 }
 
                 lex->match(TK_L_BRACKET);
-                Var* args = parseArguments(state);
+                Var *args = parseArguments(state);
 
                 auto originLex = lex;
                 auto originScopes = scopes;
 
                 ret = make_shared<VarLink>(callFunction(state, func, args));
 
-                lex=originLex;
+                lex = originLex;
                 scopes = originScopes;
 
                 return ret;
@@ -438,7 +438,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
                 if (!child && ret->var->isObject() && id != TK_THIS) {
                     ret = ret->var->findChild(JS_THIS_VAR);
                 }
-                child=true;
+                child = true;
                 lex->match(TK_DOT);
                 if (state == RUNNING) {
                     auto varName = lex->token.value;
@@ -468,21 +468,21 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
         if (state == RUNNING && !ret) {
             ret = make_shared<VarLink>(new Var("", VAR_ARRAY), lex->token.value);
         }
-        Var* var=ret->var;
+        Var *var = ret->var;
 
-        int index=0;
+        int index = 0;
         shared_ptr<VarLink> item;
-        while (true){
-            item=eval(state);
+        while (true) {
+            item = eval(state);
 
-            if(item== nullptr){
+            if (item == nullptr) {
                 lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
             stringstream ss;
             ss << index;
             var->addChild(ss.str(), item->var);
-            if(lex->token.type == TK_R_SQUARE_BRACKET){
+            if (lex->token.type == TK_R_SQUARE_BRACKET) {
                 lex->match(TK_R_SQUARE_BRACKET);
                 break;
             }
@@ -495,7 +495,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     } else if (lex->token.type == TK_FUNCTION) { // function declaration
         lex->match(TK_FUNCTION);
 
-        Var* func = parseFuncDefinition(true);
+        Var *func = parseFuncDefinition(true);
 
         return make_shared<VarLink>(func);
     } else if (lex->token.type == TK_NEW) { // new an object
@@ -504,38 +504,40 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
 
         lex->match(TK_IDENTIFIER);
         lex->match(TK_L_BRACKET);
-        Var* args = parseArguments(state);
+        Var *args = parseArguments(state);
 
         auto originLex = lex;
         auto originScopes = scopes;
 
         auto ret = make_shared<VarLink>(newObject(state, object, args));
 
-        lex=originLex;
+        lex = originLex;
         scopes = originScopes;
 
         return ret;
     }
     return nullptr;
 }
-Var* TinyJS:: newObject(STATE& state, shared_ptr<VarLink> func, Var* args){
+
+Var *TinyJS::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto num = args->findChild(JS_PARAMETER_VAR);
     auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
-    if(num->var->getInt() != funcNum->var->getInt()){
-        cout<<"error: expected number of arguments is "<<funcNum->var->getInt()<<".But it's "<<num->var->getInt()<<" now."<<endl;
+    if (num->var->getInt() != funcNum->var->getInt()) {
+        cout << "error: expected number of arguments is " << funcNum->var->getInt() << ".But it's " <<
+        num->var->getInt() << " now." << endl;
         return nullptr;
     }
 
     scopes.clear();
     auto funcScope = func->var->findChild(JS_SCOPE)->var;
-    int number=func->var->findChild(JS_SCOPE_NUM)->var->getInt();
-    for(int i=0;i<number;i++){
+    int number = func->var->findChild(JS_SCOPE_NUM)->var->getInt();
+    for (int i = 0; i < number; i++) {
         stringstream ss;
         ss << i;
         scopes.push_back(funcScope->findChild(ss.str())->var);
     }
 
-    Var* scope=new Var();
+    Var *scope = new Var();
     scopes.push_back(scope);
     scope->addChild(JS_RETURN_VAR, new Var());
     scope->addChild(JS_THIS_VAR, new Var());
@@ -544,15 +546,15 @@ Var* TinyJS:: newObject(STATE& state, shared_ptr<VarLink> func, Var* args){
     auto inArgus = args->findChild(JS_ARGS_VAR);
     auto outArgus = func->var->findChild(JS_ARGS_VAR);
 
-    for(int i=0;i<n;i++){
+    for (int i = 0; i < n; i++) {
         stringstream ss;
         ss << i;
 
         auto tmp = inArgus->var->findChild(ss.str())->var;
-        if(tmp->isInt() || tmp->isBoolean() || tmp->isDouble()){
-            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
-        }else{
-            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
+        if (tmp->isInt() || tmp->isBoolean() || tmp->isDouble()) {
+            scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
+        } else {
+            scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp);
         }
 
     }
@@ -567,18 +569,19 @@ Var* TinyJS:: newObject(STATE& state, shared_ptr<VarLink> func, Var* args){
     }
     state = oriState;
 
-    Var* ret=new Var();
+    Var *ret = new Var();
     ret->addChild(JS_THIS_VAR, scope->findChild(JS_THIS_VAR)->var);
 
     return ret;
 }
-shared_ptr<VarLink> TinyJS:: parseJSON(STATE& state){
+
+shared_ptr<VarLink> TinyJS::parseJSON(STATE &state) {
     auto result = make_shared<VarLink>(new Var());
     auto var = result->var;
 
     lex->match(TK_L_LARGE_BRACKET);
-    while(true){
-        if(lex->token.type == TK_R_LARGE_BRACKET){
+    while (true) {
+        if (lex->token.type == TK_R_LARGE_BRACKET) {
             lex->match(TK_R_LARGE_BRACKET);
             break;
         }
@@ -586,18 +589,18 @@ shared_ptr<VarLink> TinyJS:: parseJSON(STATE& state){
         string name = lex->token.value;
         lex->match(TK_IDENTIFIER);
         lex->match(TK_COLON);
-        if(lex->token.type == TK_L_LARGE_BRACKET){//the child also has a json
+        if (lex->token.type == TK_L_LARGE_BRACKET) {//the child also has a json
             var->addUniqueChild(name, parseJSON(state)->var);
         }
-        else if(lex->token.type == TK_FUNCTION){
+        else if (lex->token.type == TK_FUNCTION) {
             lex->match(TK_FUNCTION);
             var->addUniqueChild(name, parseFuncDefinition(true));
         }
-        else{
+        else {
             var->addUniqueChild(name, eval(state)->var);
         }
 
-        if(lex->token.type == TK_COMMA){
+        if (lex->token.type == TK_COMMA) {
             lex->match(TK_COMMA);
         }
     }
@@ -605,18 +608,18 @@ shared_ptr<VarLink> TinyJS:: parseJSON(STATE& state){
     return result;
 }
 
-Var* TinyJS:: parseArguments(STATE& state){
-    Var* args = new Var();
-    args->addChild(JS_ARGS_VAR,new Var());
+Var *TinyJS::parseArguments(STATE &state) {
+    Var *args = new Var();
+    args->addChild(JS_ARGS_VAR, new Var());
     auto params = args->findChild(JS_ARGS_VAR);
 
-    int index=0;
-    while(true){
-        if(lex->token.type == TK_R_BRACKET){
+    int index = 0;
+    while (true) {
+        if (lex->token.type == TK_R_BRACKET) {
             lex->match(TK_R_BRACKET);
             break;
         }
-        if(lex->token.type == TK_COMMA){
+        if (lex->token.type == TK_COMMA) {
             lex->match(TK_COMMA);
         }
 
@@ -631,14 +634,14 @@ Var* TinyJS:: parseArguments(STATE& state){
     return args;
 }
 
-Var* TinyJS:: parseFuncDefinition(bool assign){
+Var *TinyJS::parseFuncDefinition(bool assign) {
     auto func = new Var();
     func->type = VAR_FUNCTION;
 
     auto funcScopes = new Var();
     func->addChild(JS_SCOPE, funcScopes);
-    int index=0;
-    for(auto x: scopes){
+    int index = 0;
+    for (auto x: scopes) {
         stringstream ss;
         ss << index;
         funcScopes->addChild(ss.str(), x);
@@ -646,18 +649,18 @@ Var* TinyJS:: parseFuncDefinition(bool assign){
     }
     func->addChild(JS_SCOPE_NUM, new Var(index));
 
-    if(!assign)
+    if (!assign)
         lex->match(TK_IDENTIFIER);
     lex->match(TK_L_BRACKET);
 
     auto args = new Var();
-    int count=0;
-    while(true){
-        if(lex->token.type == TK_R_BRACKET){
+    int count = 0;
+    while (true) {
+        if (lex->token.type == TK_R_BRACKET) {
             lex->match(TK_R_BRACKET);
             break;
         }
-        if(lex->token.type == TK_COMMA){
+        if (lex->token.type == TK_COMMA) {
             lex->match(TK_COMMA);
         }
 
@@ -674,24 +677,25 @@ Var* TinyJS:: parseFuncDefinition(bool assign){
     return func;
 }
 
-Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args){
+Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto num = args->findChild(JS_PARAMETER_VAR);
     auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
-    if(num->var->getInt() != funcNum->var->getInt()){
-        cout<<"error: expected number of arguments is "<<funcNum->var->getInt()<<".But it's "<<num->var->getInt()<<" now."<<endl;
+    if (num->var->getInt() != funcNum->var->getInt()) {
+        cout << "error: expected number of arguments is " << funcNum->var->getInt() << ".But it's " <<
+        num->var->getInt() << " now." << endl;
         return nullptr;
     }
 
     scopes.clear();
     auto funcScope = func->var->findChild(JS_SCOPE)->var;
-    int number=func->var->findChild(JS_SCOPE_NUM)->var->getInt();
-    for(int i=0;i<number;i++){
+    int number = func->var->findChild(JS_SCOPE_NUM)->var->getInt();
+    for (int i = 0; i < number; i++) {
         stringstream ss;
         ss << i;
         scopes.push_back(funcScope->findChild(ss.str())->var);
     }
 
-    Var* scope=new Var();
+    Var *scope = new Var();
     scopes.push_back(scope);
     scope->addChild(JS_RETURN_VAR, new Var());
 
@@ -699,15 +703,15 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args){
     auto inArgus = args->findChild(JS_ARGS_VAR);
     auto outArgus = func->var->findChild(JS_ARGS_VAR);
 
-    for(int i=0;i<n;i++){
+    for (int i = 0; i < n; i++) {
         stringstream ss;
         ss << i;
 
         auto tmp = inArgus->var->findChild(ss.str())->var;
-        if(tmp->isInt() || tmp->isBoolean() || tmp->isDouble()){
-            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
-        }else{
-            scope->addChild( outArgus->var->findChild(ss.str())->var->getString(), tmp);
+        if (tmp->isInt() || tmp->isBoolean() || tmp->isDouble()) {
+            scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp->copyThis());
+        } else {
+            scope->addChild(outArgus->var->findChild(ss.str())->var->getString(), tmp);
         }
 
     }
@@ -722,7 +726,7 @@ Var* TinyJS:: callFunction(STATE& state, shared_ptr<VarLink> func,Var* args){
     }
     state = oriState;
 
-    Var* ret;
+    Var *ret;
     if (scope->findChild(JS_RETURN_VAR)->var->isFunction()) {
         ret = scope->findChild(JS_RETURN_VAR)->var;//->copyThis();
     } else {
