@@ -8,7 +8,7 @@
 
 using namespace std;
 
-void TinyJS::execute() {
+void Interpreter::execute() {
     lex = new Lex(this->code);
     lex->getNextToken();
     scopes.clear();
@@ -19,7 +19,7 @@ void TinyJS::execute() {
     }
 }
 
-void TinyJS::statement(STATE &state) {
+void Interpreter::statement(STATE &state) {
     if (lex->token.type == TK_IDENTIFIER ||
         lex->token.type == TK_DEC_INT ||
         lex->token.type == TK_HEX_INT ||
@@ -191,7 +191,7 @@ void TinyJS::statement(STATE &state) {
     }
 }
 
-shared_ptr<VarLink> TinyJS::eval(STATE &state) {
+shared_ptr<VarLink> Interpreter::eval(STATE &state) {
     auto lhs = ternary(state);
     if (lex->token.type == TK_ASSIGN || lex->token.type == TK_PLUS_EQUAL || lex->token.type == TK_MINUS_EQUAL) {
         if (state == RUNNING && !lhs->owned) {
@@ -212,7 +212,7 @@ shared_ptr<VarLink> TinyJS::eval(STATE &state) {
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::ternary(STATE &state) {
+shared_ptr<VarLink> Interpreter::ternary(STATE &state) {
     auto lhs = logic(state);
     while (lex->token.type == TK_QUESTION_MARK) {
         lex->match(TK_QUESTION_MARK);
@@ -236,7 +236,7 @@ shared_ptr<VarLink> TinyJS::ternary(STATE &state) {
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::logic(STATE &state) {
+shared_ptr<VarLink> Interpreter::logic(STATE &state) {
     auto lhs = compare(state);
     while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
            lex->token.type == TK_AND_AND || lex->token.type == TK_OR_OR) {
@@ -269,7 +269,7 @@ shared_ptr<VarLink> TinyJS::logic(STATE &state) {
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::compare(STATE &state) {
+shared_ptr<VarLink> Interpreter::compare(STATE &state) {
     auto lhs = shift(state);
     while (lex->token.type == TK_EQUAL || lex->token.type == TK_N_EQUAL ||
            lex->token.type == TK_TYPEEQUAL || lex->token.type == TK_N_TYPEEQUAL ||
@@ -286,7 +286,7 @@ shared_ptr<VarLink> TinyJS::compare(STATE &state) {
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::shift(STATE &state) {
+shared_ptr<VarLink> Interpreter::shift(STATE &state) {
     auto ret = expression(state);
     if (lex->token.type == TK_L_SHIFT || lex->token.type == TK_R_SHIFT) {
         ret = make_shared<VarLink>(ret->var->copyThis());
@@ -304,7 +304,7 @@ shared_ptr<VarLink> TinyJS::shift(STATE &state) {
     return ret;
 }
 
-shared_ptr<VarLink> TinyJS::expression(STATE &state) {
+shared_ptr<VarLink> Interpreter::expression(STATE &state) {
     bool negative = false;
     if (lex->token.type == TK_MINUS) {
         lex->match(TK_MINUS);
@@ -338,7 +338,7 @@ shared_ptr<VarLink> TinyJS::expression(STATE &state) {
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
+shared_ptr<VarLink> Interpreter::term(STATE &state) {  // handle *, /, % operator
     auto lhs = unary(state);
     while (lex->token.type == TK_MULTIPLY || lex->token.type == TK_DIVIDE || lex->token.type == TK_MOD) {
         lhs = make_shared<VarLink>(lhs->var->copyThis());
@@ -352,7 +352,7 @@ shared_ptr<VarLink> TinyJS::term(STATE &state) {  // handle *, /, % operator
     return lhs;
 }
 
-shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
+shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! operator
     if (lex->token.type == TK_NOT) {
         lex->match(TK_NOT);
         auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
@@ -365,7 +365,7 @@ shared_ptr<VarLink> TinyJS::unary(STATE &state) { // handle ! operator
     }
 }
 
-shared_ptr<VarLink> TinyJS::factor(STATE &state) {
+shared_ptr<VarLink> Interpreter::factor(STATE &state) {
     if (lex->token.type == TK_L_BRACKET) {
         lex->match(TK_L_BRACKET);
         auto ret = eval(state);
@@ -517,7 +517,7 @@ shared_ptr<VarLink> TinyJS::factor(STATE &state) {
     return nullptr;
 }
 
-Var *TinyJS::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
+Var *Interpreter::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto num = args->findChild(JS_PARAMETER_VAR);
     auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
     if (num->var->getInt() != funcNum->var->getInt()) {
@@ -571,7 +571,7 @@ Var *TinyJS::newObject(STATE &state, shared_ptr<VarLink> func, Var *args) {
     return ret;
 }
 
-shared_ptr<VarLink> TinyJS::parseJSON(STATE &state) {
+shared_ptr<VarLink> Interpreter::parseJSON(STATE &state) {
     auto result = make_shared<VarLink>(new Var());
     auto var = result->var;
 
@@ -604,7 +604,7 @@ shared_ptr<VarLink> TinyJS::parseJSON(STATE &state) {
     return result;
 }
 
-Var *TinyJS::parseArguments(STATE &state) {
+Var *Interpreter::parseArguments(STATE &state) {
     Var *args = new Var();
     args->addChild(JS_ARGS_VAR, new Var());
     auto params = args->findChild(JS_ARGS_VAR);
@@ -628,7 +628,7 @@ Var *TinyJS::parseArguments(STATE &state) {
     return args;
 }
 
-Var *TinyJS::parseFuncDefinition(bool assign) {
+Var *Interpreter::parseFuncDefinition(bool assign) {
     auto func = new Var();
     func->type = VAR_FUNCTION;
 
@@ -667,7 +667,7 @@ Var *TinyJS::parseFuncDefinition(bool assign) {
     return func;
 }
 
-Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
+Var *Interpreter::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
     auto num = args->findChild(JS_PARAMETER_VAR);
     auto funcNum = func->var->findChild(JS_PARAMETER_VAR);
     if (num->var->getInt() != funcNum->var->getInt()) {
@@ -723,7 +723,7 @@ Var *TinyJS::callFunction(STATE &state, shared_ptr<VarLink> func, Var *args) {
 
 }
 
-void TinyJS::block(STATE &state) {
+void Interpreter::block(STATE &state) {
     lex->match(TK_L_LARGE_BRACKET);
     if (state == RUNNING) {
         while (lex->token.type != TK_EOF && lex->token.type != TK_R_LARGE_BRACKET) {
@@ -743,7 +743,7 @@ void TinyJS::block(STATE &state) {
     }
 }
 
-shared_ptr<VarLink> TinyJS::findVar(const string &varName) {
+shared_ptr<VarLink> Interpreter::findVar(const string &varName) {
     for (int i = (int) scopes.size() - 1; i >= 0; i--) {
         auto var = scopes[i]->findChild(varName);
         if (var) {

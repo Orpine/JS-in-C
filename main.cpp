@@ -22,10 +22,10 @@ string endline(endLineChar);
 
 
 int main() {
-    string file="./Test4JS/test1.js";
-    TinyJS tinyJS(file);
-    tinyJS.execute();
+    string file="./Test4JS/2.js";
+    Interpreter interpreter(file);
+    interpreter.execute();
 
-    cout << tinyJS.root->findChild("result")->var->getInt() << endl;
+    cout << interpreter.root->findChild("result")->var->getBool() << endl;
     return 0;
 }

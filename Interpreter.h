@@ -20,7 +20,7 @@ enum STATE {
     CONTINUE
 };
 
-class TinyJS {
+class Interpreter {
 private:
     string code;
     Lex *lex;
@@ -54,7 +54,7 @@ private:
 
 
 public:
-    TinyJS(const string &file) {
+    Interpreter(const string &file) {
         const int maxSize = 1000000; // support 1MB code;
         char code[maxSize];
         FILE *fin = fopen(file.c_str(), "r");
