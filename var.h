@@ -155,24 +155,15 @@ public:
 
     void removeAllChildren();
 
-    Var *getAtIndex(int idx); //
-    void setAtIndex(int idx, Var *var); //
     int getArrayLength(); //
-    int getNumberOfChildren(); //
 
-    Var *getReturnVar();
 
-    void setReturnVar(Var *var);
-
-    Var *getParameter(const std::string &name);
 
     Var *ref();
 
     //get a reference to this variable
     void unref();
 
-    //unreference
-    int getRefNum() { return refNum; }
 };
 
 const std::string ANONYMOUS_VAR = "";
@@ -197,9 +188,6 @@ public:
 
     void replaceWith(shared_ptr<VarLink> varLink);
 
-    int getIntName();
-
-    void setIntNmae(int idx);
 };
 
 

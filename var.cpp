@@ -33,17 +33,6 @@ void VarLink::replaceWith(shared_ptr<VarLink> varLink) {
         replaceWith(new Var());
 }
 
-int VarLink::getIntName() {
-    return atoi(name.c_str());
-}
-
-void VarLink::setIntNmae(int idx) {
-    std::stringstream ss;
-    std::string str;
-    ss << idx;
-    ss >> str;
-    name = str;
-}
 
 void Var::init() {
     refNum = 0;
@@ -53,8 +42,6 @@ void Var::init() {
     intData = 0;
     doubleData = 0;
     stringData = "";
-    callback = 0;
-    callbackData = 0;
     native = false;
 }
 
@@ -108,6 +95,8 @@ Var::Var(double varData) {
     init();
     setDouble(varData);
 }
+
+
 
 
 Var::~Var() {
@@ -458,30 +447,6 @@ void Var::removeAllChildren() {
     lastChild = nullptr;
 }
 
-Var *Var::getAtIndex(int idx) {
-    stringstream ss;
-    string strIdx;
-    ss << idx;
-    ss >> strIdx;
-    auto link = findChild(strIdx);
-    if (link)
-        return link->var;
-    else
-        return new Var("", VAR_NULL);
-}
-
-void Var::setAtIndex(int idx, Var *var) {
-    stringstream ss;
-    string strIdx;
-    ss << idx;
-    ss >> strIdx;
-    auto link = findChild(strIdx);
-    if (link)
-        link->replaceWith(var);
-    else {
-        addChild(strIdx, var);
-    }
-}
 
 //
 int Var::getArrayLength() {
@@ -500,27 +465,6 @@ int Var::getArrayLength() {
 
 }
 
-int Var::getNumberOfChildren() {
-    int count = 0;
-    auto link = firstChild;
-    while (link) {
-        count++;
-        link = link->nextSibling;
-    }
-    return count;
-}
-
-Var *Var::getReturnVar() {
-    return getParameter(JS_RETURN_VAR);
-}
-
-void Var::setReturnVar(Var *var) {
-    findChildOrCreate(JS_RETURN_VAR)->replaceWith(var);
-}
-
-Var *Var::getParameter(const std::string &name) {
-    return findChildOrCreate(name)->var;
-}
 
 void Var::copyValueFrom(Var *var) {
     if (var) {
