@@ -13,7 +13,7 @@ int main() {
 //    string file="./Test4JS/array.js";
 //    string file="./Test4JS/recursion.js";
 //    string file="./Test4JS/this_and_new.js";
-    string file="./Test4JS/1.js";
+    string file="./Test4JS/eval.js";
 
     Interpreter interpreter(file);
     interpreter.execute();

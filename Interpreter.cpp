@@ -198,13 +198,10 @@ void Interpreter::statement(STATE &state) {
     }
 }
 
+// handle =, +=, -=
 shared_ptr<VarLink> Interpreter::eval(STATE &state) {
     auto lhs = ternary(state);
     if (lex->token.type == TK_ASSIGN || lex->token.type == TK_PLUS_EQUAL || lex->token.type == TK_MINUS_EQUAL) {
-//        if (state == RUNNING && !lhs->owned) {
-//            assert(lhs->name.length() != 0);
-//            lhs = root->addUniqueChild(lhs->name, lhs->var);
-//        }
         auto op = lex->token.type;
         lex->match(op);
         auto rhs = eval(state);
@@ -219,6 +216,7 @@ shared_ptr<VarLink> Interpreter::eval(STATE &state) {
     return lhs;
 }
 
+// handle  ? : operator
 shared_ptr<VarLink> Interpreter::ternary(STATE &state) {
     auto lhs = logic(state);
     while (lex->token.type == TK_QUESTION_MARK) {
@@ -243,6 +241,7 @@ shared_ptr<VarLink> Interpreter::ternary(STATE &state) {
     return lhs;
 }
 
+// handle &, |, &&, || operator
 shared_ptr<VarLink> Interpreter::logic(STATE &state) {
     auto lhs = compare(state);
     while (lex->token.type == TK_BITWISE_AND || lex->token.type == TK_BITWISE_OR || lex->token.type == TK_BITWISE_XOR ||
@@ -276,6 +275,7 @@ shared_ptr<VarLink> Interpreter::logic(STATE &state) {
     return lhs;
 }
 
+// handle ==, !=, ===, !==, <, >, <=, >= operator
 shared_ptr<VarLink> Interpreter::compare(STATE &state) {
     auto lhs = shift(state);
     while (lex->token.type == TK_EQUAL || lex->token.type == TK_N_EQUAL ||
@@ -293,6 +293,7 @@ shared_ptr<VarLink> Interpreter::compare(STATE &state) {
     return lhs;
 }
 
+// handle <<, >> operator
 shared_ptr<VarLink> Interpreter::shift(STATE &state) {
     auto ret = expression(state);
     if (lex->token.type == TK_L_SHIFT || lex->token.type == TK_R_SHIFT) {
@@ -311,7 +312,8 @@ shared_ptr<VarLink> Interpreter::shift(STATE &state) {
     return ret;
 }
 
-shared_ptr<VarLink> Interpreter::expression(STATE &state) { // handle term +- term
+// handle +, - operator
+shared_ptr<VarLink> Interpreter::expression(STATE &state) {
     bool negative = false;
     if (lex->token.type == TK_MINUS) {
         lex->match(TK_MINUS);
@@ -345,7 +347,8 @@ shared_ptr<VarLink> Interpreter::expression(STATE &state) { // handle term +- te
     return lhs;
 }
 
-shared_ptr<VarLink> Interpreter::term(STATE &state) {  // handle *, /, % operator
+// handle *, /, % operator
+shared_ptr<VarLink> Interpreter::term(STATE &state) {
     auto lhs = unary(state);
     while (lex->token.type == TK_MULTIPLY || lex->token.type == TK_DIVIDE || lex->token.type == TK_MOD) {
         lhs = make_shared<VarLink>(lhs->var->copyThis());
@@ -359,7 +362,8 @@ shared_ptr<VarLink> Interpreter::term(STATE &state) {  // handle *, /, % operato
     return lhs;
 }
 
-shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! and ~ operator
+// handle ! and ~ operator
+shared_ptr<VarLink> Interpreter::unary(STATE &state) {
     if (lex->token.type == TK_NOT) {
         lex->match(TK_NOT);
         auto ret = make_shared<VarLink>(factor(state)->var->copyThis());
@@ -380,6 +384,7 @@ shared_ptr<VarLink> Interpreter::unary(STATE &state) { // handle ! and ~ operato
     }
 }
 
+// handle (...), primitive value, {...}(json format), var access/function call, array declaration, function declaration
 shared_ptr<VarLink> Interpreter::factor(STATE &state) {
     if (lex->token.type == TK_L_BRACKET) {
         lex->match(TK_L_BRACKET);
@@ -402,9 +407,6 @@ shared_ptr<VarLink> Interpreter::factor(STATE &state) {
         auto ret = make_shared<VarLink>(new Var(lex->token.value.substr(1, lex->token.value.length() - 2)));
         lex->match(TK_STRING);
         return ret;
-    } else if (lex->token.type == TK_L_LARGE_BRACKET) {
-        auto ret = parseJSON(state);
-        return ret;
     } else if (lex->token.type == TK_TRUE) {
         lex->match(TK_TRUE);
         return make_shared<VarLink>(new Var(true));
@@ -417,6 +419,9 @@ shared_ptr<VarLink> Interpreter::factor(STATE &state) {
     } else if (lex->token.type == TK_UNDEIFNED) {
         lex->match(TK_UNDEIFNED);
         return make_shared<VarLink>(new Var("undefined", VAR_UNDEFINED));
+    } else if (lex->token.type == TK_L_LARGE_BRACKET) {
+        auto ret = parseJSON(state);
+        return ret;
     } else if (lex->token.type == TK_IDENTIFIER || lex->token.type == TK_THIS) {
 
         auto ret = state == RUNNING ? findVar(lex->token.value) : make_shared<VarLink>(new Var());
