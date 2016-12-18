@@ -30,9 +30,9 @@ after that, directly use l.tokens:
     
 
 
-### SUPPORT
+### SUPPORTS
 * " " is not required, tokens can be adjacent to each other.
-* tokens defined in TOKEN_TYPES
+* tokens are defined in TOKEN_TYPES
 
 Numbers:
 	signed decimal;
