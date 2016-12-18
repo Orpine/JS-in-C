@@ -1,5 +1,6 @@
 # JS-in-C
 
+A JS interpreter in C++, implemented via recursive decent parsing.
 ---
 
 #Lex
@@ -55,7 +56,7 @@ And if the script contains multi-line comments, you need to read the whole text,
     }
 
 
-##RESTRICTION
+##RESTRICTIONS
 
 1. the tokens that can appear before numbers with '+/-' prefix:
     
