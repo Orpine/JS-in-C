@@ -2,10 +2,9 @@
 
 A JS interpreter in C++, implemented via recursive decent parsing.
 
----
 
-#Lex
-##Usage
+## Lex
+### Usage
 
     Lex l(const string& str)
 or
@@ -31,7 +30,7 @@ after that, directly use l.tokens:
     
 
 
-##SUPPORT
+### SUPPORT
 * " " is not required, tokens can be adjacent to each other.
 * tokens defined in TOKEN_TYPES
 
@@ -57,7 +56,7 @@ And if the script contains multi-line comments, you need to read the whole text,
     }
 
 
-##RESTRICTIONS
+### RESTRICTIONS
 
 1. the tokens that can appear before numbers with '+/-' prefix:
     
@@ -68,5 +67,5 @@ And if the script contains multi-line comments, you need to read the whole text,
 
 2. do not support operators '>>>' and '>>>='
 
----
+
 
